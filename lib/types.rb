@@ -2,6 +2,10 @@ module ByteMapper
 
   # Type the standard sizes with their unpack directive
   module Types
+    def self.register_type(name, type)
+      const_set(name, type) unless const_defined? name
+    end
+
     INT8_T 	= [8,'c']
     INT16_T	= [16,'s']
     INT32_T	= [32,'l']

@@ -70,7 +70,7 @@ class TypesTest < Minitest::Test
   end
 
   def test_adding_types
-    ::ByteMapper.add_types(ElfTypes)
+    ::ByteMapper.register_types(ElfTypes)
     ::ByteMapper.register_shapes({elf_header1: @shape1})
     ::ByteMapper.register_shapes({elf_header2: @shape2})
     container1 = ::ByteMapper.map(:elf_header1, @bytes1)

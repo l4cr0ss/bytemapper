@@ -5,19 +5,19 @@ require 'shapes'
 
 module ByteMapper
 
-  def self.add_types(types)
+  def self.register_types(types)
     types.constants.each do |s|
-      Types.const_set(s, types.const_get(s)) unless Types.const_defined?(s)
+      Types.register_type(s, types.const_get(s))
     end
   end
 
   def self.register_shapes(shapes)
-    err = 'register_shape() expects a hash' 
+    err = 'register_shapes() expects a hash' 
     raise err unless shapes.class == Hash
 
-    shapes.each do |key, value|
-      key = key.upcase
-      Shapes.const_set(key, value) unless Shapes.const_defined? key
+    shapes.each do |name, shape|
+      name = name.upcase.to_sym
+      Shapes.register_shape(name, shape)
     end
   end
 
@@ -40,8 +40,8 @@ module ByteMapper
       @hash = Digest::SHA2.hexdigest(shape.inspect)
     end
 
-    # Map bytes of a given endianness to a container that will be of name using
-    # attributes and size/flag info stored on the shape defining its shape.
+    # Map bytes of a given endianness to a container of name using attributes
+    # and size/flag info stored on its shape definition
     def map(bytes, n, e = nil)
 
       # If the bytes aren't already file-like then make them that way.
