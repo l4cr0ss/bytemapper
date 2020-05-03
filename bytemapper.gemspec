@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
-  s.name        = 'byte-mapper'
-  s.version     = '0.0.1'
+  s.name        = 'bytemapper'
+  s.version     = '0.0.9'
   s.date        = '2020-04-25'
   s.summary     = "Map C structs to Ruby objects"
   s.description = "Map C structs to Ruby objects"

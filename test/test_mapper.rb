@@ -1,11 +1,10 @@
 require 'minitest/autorun'
 require 'stringio'
-require 'mapper'
+require 'bytemapper'
 
 class ByteMapperTest < Minitest::Test
   def setup
     @bytes64 = {                                        
-      #'00':  '7f454c46020101000000000000000000',
       '10':  '03003e00010000008006000000000000',
       '20':  '4000000000000000081a000000000000',
       '30':  '0000000040003800090040001d001c00',
@@ -15,6 +14,11 @@ class ByteMapperTest < Minitest::Test
       '70':  '08000000000000000300000004000000',
       '80':  '38020000000000003802000000000000',
       '90':  '38020000000000001c00000000000000'
+    }.values.join.scan(/../).map(&:hex).map(&:chr).join
+
+    @bytes_missing = {
+      '10':  '03003e00010000008006000000000000',
+      '20':  '4000000000000000081a000000000000'
     }.values.join.scan(/../).map(&:hex).map(&:chr).join
 
     elf64_ehdr = {
@@ -49,6 +53,15 @@ class ByteMapperTest < Minitest::Test
     assert @mapper.respond_to? :map
   end
 
-  def test_size
+  def test_over_read
+    container = @mapper.map(@bytes_missing, 'Ehdr')
+    present = [:e_type, :e_machine, :e_version, :e_entry, :e_phoff, :e_shoff]
+    empty = [:e_flags, :e_ehsize, :e_phentsize, :e_phnum, :e_shentsize, :e_shnum, :e_shstrndx]
+    assert_equal container.present, present
+    assert_equal container.missing, empty
+    assert_equal 48, container.size
+    assert_equal 32, container.used
+    assert_equal 16, container.remain
   end
+
 end
