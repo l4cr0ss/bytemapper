@@ -42,37 +42,17 @@ module ByteMapper
 
     # Map bytes of a given endianness to a container of name using attributes
     # and size/flag info stored on its shape definition
-    def map(bytes, n, e = nil)
+    def map(bytes, name, e = nil)
 
       # If the bytes aren't already file-like then make them that way.
       bytes = bytes.respond_to?(:read) ? bytes : StringIO.new(bytes)
 
-      # Shape, in C, is the struct.       
-      shape = @shape
+      # Reduce nested shapes until they are flat
 
-      # Only define a new container class if the name doesn't already exist.
-      unless Object.const_defined?(n)
-        klass = Struct.new(*shape.keys)
-        klass.instance_eval do |i|
-          attr_reader :bytes
-          define_method(:contents) { members.map(&:to_sym).zip(values).to_h }
-          define_method(:shape) { shape }
-          define_method(:present) { members.filter { |m| !send(m).nil? } }
-          define_method(:missing) { members.filter { |m| send(m).nil? } }
-          define_method(:size) { 
-            shape.values.map { |v| v[0] >> 3 }.reduce(:+) 
-          } 
-          define_method(:used) { send(:bytes).size }
-          define_method(:full?) { send(:size) == send(:used) }
-          define_method(:remain) { send(:size) - send(:used) }
-          define_method(:hash) { 
-            Digest::SHA2.hexdigest(members.zip(values).join)
-          }
-        end
-        Object.const_set(n, klass)
-      end
 
-      obj = klass.nil? ? Object.const_get(n).new : klass.new
+      define_shape_as_class(name) unless Object.const_defined?(name)
+
+      obj = klass.nil? ? Object.const_get(name).new : klass.new
       consumed = StringIO.new
       shape.each do |a, sf|
         s, f = sf
@@ -83,5 +63,27 @@ module ByteMapper
       obj.instance_variable_set("@bytes", consumed.string)
       obj
     end
+
+    private
+
+    def define_class(n)
+      klass = Struct.new(*shape.keys)
+      klass.instance_eval do |i|
+        attr_reader :bytes
+        define_method(:contents) { members.map(&:to_sym).zip(values).to_h }
+        define_method(:shape) { shape }
+        define_method(:present) { members.filter { |m| !send(m).nil? } }
+        define_method(:missing) { members.filter { |m| send(m).nil? } }
+        define_method(:size) { 
+          shape.values.map { |v| v[0] >> 3 }.reduce(:+) 
+        } 
+        define_method(:used) { send(:bytes).size }
+        define_method(:full?) { send(:size) == send(:used) }
+        define_method(:remain) { send(:size) - send(:used) }
+        define_method(:hash) { 
+          Digest::SHA2.hexdigest(members.zip(values).join)
+        }
+      end
+      Object.const_set(n, klass)
   end
 end

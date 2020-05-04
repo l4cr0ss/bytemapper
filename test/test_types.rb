@@ -35,7 +35,6 @@ class TypesTest < Minitest::Test
     @bytes1 = StringIO.new bytes
     @bytes2 = StringIO.new bytes
 
-
     @shape1 = {
       e_type: Elf64_Half,
       e_machine: Elf64_Half,
