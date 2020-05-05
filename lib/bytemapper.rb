@@ -2,8 +2,10 @@ require 'byebug'
 require 'digest'
 require 'types'
 require 'shapes' 
+require 'mapper'
 
 module ByteMapper
+  include Mapper
 
   def self.register_types(types)
     types.constants.each do |s|
@@ -27,8 +29,8 @@ module ByteMapper
 
   def self.map(name, bytes, edi = nil)
     name = name.upcase.to_sym
-    shape = Shapes.const_get(name)
-    ByteMapper.new(shape).map(bytes, name, edi)
+    bytes = bytes.respond_to?(:read) ? bytes : StringIO.new(bytes)
+    Mapper.map(name, bytes, edi)
   end
 
   class ByteMapper
@@ -47,10 +49,7 @@ module ByteMapper
       # If the bytes aren't already file-like then make them that way.
       bytes = bytes.respond_to?(:read) ? bytes : StringIO.new(bytes)
 
-      # Reduce nested shapes until they are flat
-
-
-      define_shape_as_class(name) unless Object.const_defined?(name)
+      #define_shape_as_class(name) unless Object.const_defined?(name)
 
       obj = klass.nil? ? Object.const_get(name).new : klass.new
       consumed = StringIO.new
@@ -85,5 +84,6 @@ module ByteMapper
         }
       end
       Object.const_set(n, klass)
+    end
   end
 end
