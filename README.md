@@ -1,3 +1,26 @@
+# ByteMapper
+
+## What is it?
+
+A convenient tool that lets you use user-defined templates - called shapes - to
+map arbitrary byte strings to Ruby objects.
+
+For example:
+
+```ruby
+shape = {
+          b0: :uint8_t,
+          b1: :uint8_t,
+          b2: :uint8_t,
+          b3: :uint8_t
+        }
+
+bytes = '\xC0\xDE\xBA\xBE' 
+
+
+
+```
+
 Use case: caller has bytes he knows the endianness of that he wants to map to a
 struct that he knows the name of.
 

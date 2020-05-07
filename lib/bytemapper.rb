@@ -5,6 +5,7 @@ require 'shapes'
 require 'mapper'
 
 module ByteMapper
+  include Helpers
   include Mapper
 
   def self.register_types(types)
@@ -27,63 +28,23 @@ module ByteMapper
     ByteMapper.new(shape)
   end
 
-  def self.map(name, bytes, edi = nil)
-    name = name.upcase.to_sym
-    bytes = bytes.respond_to?(:read) ? bytes : StringIO.new(bytes)
+  def self.map(name_or_shape, bytes, edi = nil)
+    if is_shapelike?(name_or_shape)
+      name = Shapes.register_shape(shape).name
+    elsif is_namelike?(name_or_shape)
+      name = name_or_shape.to_sym
+    else
+      err = "First arg to map() must be a shape or the name of a registered shape"
+      raise ArgumentError.new(err)
+    end
+
+    if is_filelike?(bytes)
+      err = "Mapping directly from file not supported - bytes must be string-like"
+    elsif is_stringiolike?(bytes)
+      bytes = bytes.string
+    end
+    bytes = bytes.force_encoding(Encoding::ASCII_8BIT) unless bytes.encoding == ENCODING::ASCII_8BIT
+
     Mapper.map(name, bytes, edi)
-  end
-
-  class ByteMapper
-    attr_reader :shape
-    attr_reader :hash
-
-    def initialize(shape)
-      @shape = shape
-      @hash = Digest::SHA2.hexdigest(shape.inspect)
-    end
-
-    # Map bytes of a given endianness to a container of name using attributes
-    # and size/flag info stored on its shape definition
-    def map(bytes, name, e = nil)
-
-      # If the bytes aren't already file-like then make them that way.
-      bytes = bytes.respond_to?(:read) ? bytes : StringIO.new(bytes)
-
-      #define_shape_as_class(name) unless Object.const_defined?(name)
-
-      obj = klass.nil? ? Object.const_get(name).new : klass.new
-      consumed = StringIO.new
-      shape.each do |a, sf|
-        s, f = sf
-        attr = bytes.read(s >> 3)
-        !attr.nil? ? consumed << attr : break
-        obj[a] = attr.unpack("#{f}#{e}")[0]
-      end
-      obj.instance_variable_set("@bytes", consumed.string)
-      obj
-    end
-
-    private
-
-    def define_class(n)
-      klass = Struct.new(*shape.keys)
-      klass.instance_eval do |i|
-        attr_reader :bytes
-        define_method(:contents) { members.map(&:to_sym).zip(values).to_h }
-        define_method(:shape) { shape }
-        define_method(:present) { members.filter { |m| !send(m).nil? } }
-        define_method(:missing) { members.filter { |m| send(m).nil? } }
-        define_method(:size) { 
-          shape.values.map { |v| v[0] >> 3 }.reduce(:+) 
-        } 
-        define_method(:used) { send(:bytes).size }
-        define_method(:full?) { send(:size) == send(:used) }
-        define_method(:remain) { send(:size) - send(:used) }
-        define_method(:hash) { 
-          Digest::SHA2.hexdigest(members.zip(values).join)
-        }
-      end
-      Object.const_set(n, klass)
-    end
   end
 end

@@ -3,21 +3,6 @@ require 'types'
 module ByteMapper
   module Shapes
     include Types
-    class BM_Shape < Hash
-      attr_accessor :name 
-
-      def flatten(flattened = {}, prefix = nil)
-        each do |k,v|
-          if v.is_a? self.class
-            v.flatten(flattened, k) 
-          else
-            k = prefix.nil? ? k : "#{prefix}_#{k}".to_sym
-            flattened[k] = v
-          end
-        end
-        flattened
-      end
-    end
 
     def self.find(name)
       name = name.upcase
