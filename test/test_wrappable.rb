@@ -64,11 +64,11 @@ class TestBMWrappable < Minitest::Test
     assert_equal(type, int16_t)
   end
 
-  def test_unwrappable_object_yields_nil
+  def test_unwrappable_object_raises
     valid_name = 'int16_t'
     invalid_type = [16,['s']]
-    invalid = ::ByteMapper::Classes::BM_Type.wrap(invalid_type, valid_name)
-    assert_nil(invalid)
+    expect = "#{::ByteMapper::Classes::BM_Type} wrapper incompatible with value #{invalid_type}"
+    invalid = assert_raises(ArgumentError) { ::ByteMapper::Classes::BM_Type.wrap(invalid_type, valid_name) }
   end
 
   def test_mixin_throws_without_under_can_wrap
