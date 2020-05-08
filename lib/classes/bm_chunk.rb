@@ -13,7 +13,7 @@ class BM_Chunk
   def _map(shape)
     shape.each do |k,v|
       singleton_class.instance_eval { attr_reader k } unless singleton_class.method_defined? k
-      if v.is_a? ::ByteMapper::BM_Shape
+      if v.is_a? ::ByteMapper::Classes::BM_Shape
         _map(v) 
       else
         instance_variable_set("@#{k.to_s}", _unpack(v))

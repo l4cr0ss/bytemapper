@@ -1,7 +1,15 @@
+require 'mixins/bm_wrappable'
+require 'mixins/helpers'
+
 module ByteMapper
   module Classes
     class BM_Shape < Hash
-      extend BM_Wrappable
+      extend ::ByteMapper::Mixins::Helpers
+      extend ::ByteMapper::Mixins::BM_Wrappable
+
+      def self.create(obj)
+        self[obj]
+      end
 
       def flatten(flattened = {}, prefix = nil)
         each do |k,v|
@@ -18,8 +26,9 @@ module ByteMapper
       private
 
       def self._can_wrap?(obj)
-        [ obj.respond_to?(:each),
-          (obj.size % 2).zero?
+        [ 
+          obj.respond_to?(:each),
+          (obj.flatten.size % 2).zero?
         ].reduce(:&)
       end
     end

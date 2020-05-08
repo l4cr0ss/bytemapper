@@ -1,41 +1,47 @@
-require 'shapes'
+require 'classes/bm_registrar'
+require 'classes/bm_shape'
+require 'classes/bm_type'
 
 module ByteMapper
   module Mapper
-    include Shapes
+    extend ::ByteMapper::Mixins::Helpers
 
-    def self.map(name_or_shape, bytes, endian = nil)
-      shape = name_or_shape.class == BM_Shape ? name_or_shape : Shapes.find(name_or_shape.to_sym)
-      BM_Chunk.new(shape, bytes, endian)
+    def register_types(obj)
+      obj.each { |name,obj| register_type(obj, name) }
     end
 
-    class BM_Chunk
-      attr_reader :shape, :bytes, :endian
+    def register_shapes(obj)
+      obj.each { |name,obj| register_shape(obj, name) }
+    end
 
-      def initialize(shape, bytes, endian)
-        @shape = shape
-        @bytes = bytes
-        @endian = endian
-        _map(shape)
+    def register_type(obj, name = nil)
+      obj = ::ByteMapper::Classes::BM_Type.wrap(obj, name)
+      ByteMapper::Classes::BM_Registrar.instance.register(obj)
+    end
+
+    def register_shape(obj, name = nil)
+      obj = ::ByteMapper::Classes::BM_Shape.wrap(obj, name)
+      obj.name = name
+      ByteMapper::Classes::BM_Registrar.instance.register(obj)
+    end
+
+    def retrieve(obj, klass)
+      ByteMapper::Classes::BM_Registrar.instance.retrieve(obj, klass)
+    end
+
+    def map(obj, bytes, endian = nil)
+      shape = retrieve(obj, ::ByteMapper::Classes::BM_Shape)
+      bytes = format_bytes(bytes)
+      ::ByteMapper::Classes::BM_Chunk.new(shape, bytes, endian)
+    end
+
+    def format_bytes(bytes)
+      if is_filelike?(bytes)
+        err = "Mapping directly from file not supported - bytes must be string-like"
+      elsif is_stringiolike?(bytes)
+        bytes = bytes.string
       end
-
-      private
-
-      def _map(shape)
-        shape.each do |k,v|
-          singleton_class.instance_eval { attr_reader k } unless singleton_class.method_defined? k
-          if v.is_a? ::ByteMapper::BM_Shape
-            _map(v) 
-          else
-            instance_variable_set("@#{k.to_s}", _unpack(v))
-          end
-        end
-      end
-
-      def _unpack(value)
-        num_bytes, flag = value
-        bytes.read(num_bytes >> 3).unpack("#{flag}#{endian}")[0]
-      end
+      bytes = bytes.force_encoding(Encoding::ASCII_8BIT) unless bytes.encoding == ENCODING::ASCII_8BIT
     end
   end
 end

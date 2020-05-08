@@ -1,11 +1,10 @@
 require 'minitest/autorun'
-require 'stringio'
+require 'classes/bm_shape'
 require 'bytemapper'
-require 'types'
+require 'stringio'
 
 class FlattenTest < Minitest::Test
-  include ::ByteMapper::Types
-  include ::ByteMapper::Shapes
+  include ByteMapper
 
   def setup
     {
@@ -24,7 +23,7 @@ class FlattenTest < Minitest::Test
         o1: UINT8_T
       }
     }.each do |name, shape|
-      ByteMapper::Shapes.register_shape(name, shape)
+      ByteMapper.register_shape(name, shape)
     end
   end
 
@@ -33,8 +32,8 @@ class FlattenTest < Minitest::Test
 
   def test_flatten
     bytes = String.new "\xc0\xde\xba\xbe", encoding: Encoding::ASCII_8BIT  
-    bm1 = ::ByteMapper.map(:outer, bytes)
-    bm2 = ::ByteMapper.map(:flattened, bytes)
+    bm1 = ByteMapper.map(:outer, bytes)
+    bm2 = ByteMapper.map(:flattened, bytes)
     byebug
     assert_equal(bm1, bm2)
   end

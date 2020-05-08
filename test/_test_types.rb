@@ -4,7 +4,7 @@ require 'bytemapper'
 require 'types'
 
 module ElfTypes
-  include ::ByteMapper::Types
+  include ::ByteMapper::Classes::BM_Type
   Elf32_Half = UINT16_T
   Elf64_Half = UINT16_T
   Elf32_Word = UINT32_T
