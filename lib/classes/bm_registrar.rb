@@ -7,18 +7,23 @@ module ByteMapper
       include Singleton
 
       def initialize
-        @registries = {}
+        @registry = BM_Registry.new
       end
 
       def register(obj)
-        klass = obj.class
-        registry = (@registries[klass] ||= BM_Registry.new(klass))
         registry.register(obj)
       end
 
-      def retrieve(obj, klass)
-        @registries[klass].retrieve(obj)
+      def retrieve(key)
+        registry.retrieve(key)
       end
+      alias_method :find, :retrieve
+
+      def registered_name?(key)
+        registry.registered_name?(key)
+      end
+      alias_method :registered?, :registered_name?
+
     end
   end
 end

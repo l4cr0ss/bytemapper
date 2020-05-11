@@ -12,7 +12,7 @@ module ByteMapper
       end
 
       def self._can_wrap?(obj)
-        return false unless obj.respond_to?(:each)
+        return false unless obj.respond_to?(:each) and obj.respond_to?(:last)
         [ 
           obj.size == 2,
           obj.first.is_a?(Integer),

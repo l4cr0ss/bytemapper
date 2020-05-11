@@ -2,7 +2,7 @@ module ByteMapper
   module Mixins
     module Helpers
       def self.is_filelike?(candidate)
-        is_iolike?(candidate) && candidate.respond_to?(:file?) 
+        candidate.respond_to?(:file) && candidate.respond_to?(:file?) 
       end
 
       def self.is_stringiolike?(candidate)

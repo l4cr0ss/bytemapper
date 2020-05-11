@@ -4,11 +4,11 @@ require 'mixins/helpers'
 require 'mapper'
 
 module ByteMapper
-  extend ::ByteMapper::Mapper
+  Mapper = Classes::Mapper.instance
 
   def self.included(klass)
     klass.class_eval do
-      ::ByteMapper.register_types({ 
+      Mapper.register_types({ 
         int8_t: [8,'c'],
         int16_t: [16,'s'],
         int32_t: [32,'l'],
