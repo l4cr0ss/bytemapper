@@ -4,7 +4,7 @@ require 'bytemapper'
 require 'types'
 
 module ElfTypes
-  include ::ByteMapper::Classes::BM_Type
+  include ::Bytemapper::Classes::BM_Type
   Elf32_Half = UINT16_T
   Elf64_Half = UINT16_T
   Elf32_Word = UINT32_T
@@ -69,11 +69,11 @@ class TypesTest < Minitest::Test
   end
 
   def test_adding_types
-    ::ByteMapper.register_types(ElfTypes)
-    ::ByteMapper.register_shapes({elf_header1: @shape1})
-    ::ByteMapper.register_shapes({elf_header2: @shape2})
-    container1 = ::ByteMapper.map(:elf_header1, @bytes1)
-    container2 = ::ByteMapper.map(:elf_header2, @bytes2)
+    ::Bytemapper.register_types(ElfTypes)
+    ::Bytemapper.register_shapes({elf_header1: @shape1})
+    ::Bytemapper.register_shapes({elf_header2: @shape2})
+    container1 = ::Bytemapper.map(:elf_header1, @bytes1)
+    container2 = ::Bytemapper.map(:elf_header2, @bytes2)
     assert_equal(container1.hash, container2.hash)
   end
 end

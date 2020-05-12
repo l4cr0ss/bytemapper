@@ -9,4 +9,4 @@ shape = {
 
 bytes = '\xC0\xDE\xBA\xBE' 
 
-chunk = ByteMapper.map(shape, bytes)
+chunk = Bytemapper.map(shape, bytes)

@@ -65,10 +65,17 @@ class TestBMShape < Minitest::Test
     assert_equal(wrapped, my_shape)
   end
 
-  def test_nested_shape_can_be_wrapped
-    byebug
+  def test_nested_shape_equals_flattened_shape
     BM_Type.wrap([8,'C'], :uint8_t)
-    shape = { 
+    flattened = {
+      outer: {
+        inner_i0: :uint8_t,
+        inner_i1: :uint8_t,
+        inner_i2: :uint8_t
+      },
+      o1: :uint8_t
+    }
+    nested = {
       outer: {
         inner: {
           i0: :uint8_t,
@@ -78,8 +85,10 @@ class TestBMShape < Minitest::Test
         o1: :uint8_t
       }
     }
-    wrapped = BM_Shape[shape]
+    obj1 = BM_Shape.wrap(flattened)
+    obj2 = BM_Shape.wrap(nested)
     byebug
+    assert_equal(obj1, obj2)
   end
 
   def test_unwrappable_object_raises

@@ -1,4 +1,4 @@
-module ByteMapper
+module Bytemapper
   module Mixins
     module Helpers
       def self.is_filelike?(obj)

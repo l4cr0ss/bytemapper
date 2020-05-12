@@ -4,7 +4,7 @@ require 'classes/bm_shape'
 require 'classes/bm_chunk'
 require 'mixins/helpers'
 
-module ByteMapper
+module Bytemapper
   module Classes
     class Mapper
       include Mixins::Helpers

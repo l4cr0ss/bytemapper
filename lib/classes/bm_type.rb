@@ -1,11 +1,11 @@
 require 'mixins/bm_wrappable'
 require 'mixins/helpers'
 
-module ByteMapper
+module Bytemapper
   module Classes
     class BM_Type < Array
-      extend ::ByteMapper::Mixins::BM_Wrappable
-      extend ::ByteMapper::Mixins::Helpers
+      extend ::Bytemapper::Mixins::BM_Wrappable
+      extend ::Bytemapper::Mixins::Helpers
 
       def self.create(obj, name = nil)
         obj = self.new(obj)
@@ -13,7 +13,8 @@ module ByteMapper
         obj
       end
 
-      def self._can_wrap?(obj)
+      def self.can_wrap?(obj)
+        super
         return false unless obj.respond_to?(:each) and obj.respond_to?(:last)
         [ 
           obj.size == 2,

@@ -2,15 +2,15 @@ require 'test_helper'
 
 # Must fail because it does not override _can_wrap?
 class WrapItAllUp 
-  extend ::ByteMapper::Mixins::BM_Wrappable
+  extend ::Bytemapper::Mixins::BM_Wrappable
 end
 
 # Test the interface to make sure it works right as an interface.
 class TestBMWrappable < Minitest::Test
   include TestHelpers
 
-  BM_Type = ::ByteMapper::Classes::BM_Type
-  BM_Registry = ::ByteMapper::Classes::BM_Registry
+  BM_Type = ::Bytemapper::Classes::BM_Type
+  BM_Registry = ::Bytemapper::Classes::BM_Registry
 
   def test_objects_can_be_wrapped_with_a_string_like_name
     int16_t = BM_Type.wrap([16,'s'], "uint8_t")

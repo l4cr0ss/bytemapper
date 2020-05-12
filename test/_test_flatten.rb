@@ -4,11 +4,11 @@ require 'bytemapper'
 require 'stringio'
 
 class FlattenTest < Minitest::Test
-  include ByteMapper
+  include Bytemapper
 
-  BM_Type = ::ByteMapper::Classes::BM_Type
-  BM_Shape = ::ByteMapper::Classes::BM_Shape
-  BM_Registry = ::ByteMapper::Classes::BM_Registry
+  BM_Type = ::Bytemapper::Classes::BM_Type
+  BM_Shape = ::Bytemapper::Classes::BM_Shape
+  BM_Registry = ::Bytemapper::Classes::BM_Registry
 
   def setup
     {
@@ -47,7 +47,7 @@ class FlattenTest < Minitest::Test
       }
     }.each do |name, shape|
       byebug
-      ByteMapper.register_shape(shape, name)
+      Bytemapper.register_shape(shape, name)
     end
   end
 
@@ -56,8 +56,8 @@ class FlattenTest < Minitest::Test
 
   def test_flatten
     bytes = String.new "\xc0\xde\xba\xbe", encoding: Encoding::ASCII_8BIT  
-    bm1 = ByteMapper.map(bytes, :outer)
-    bm2 = ByteMapper.map(bytes, :flattened)
+    bm1 = Bytemapper.map(bytes, :outer)
+    bm2 = Bytemapper.map(bytes, :flattened)
     assert_equal(bm1, bm2)
   end
 end

@@ -1,4 +1,4 @@
-# ByteMapper
+# Bytemapper
 
 ## What is it?
 

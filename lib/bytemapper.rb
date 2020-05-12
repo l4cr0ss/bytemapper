@@ -1,9 +1,19 @@
 require 'byebug'
 require 'digest'
 require 'mixins/helpers'
+require 'mixins/console'
 require 'mapper'
 
-module ByteMapper
+module Bytemapper::Console
+  include Bytemapper
+  def self.included(klass)
+    klass.instance_eval do
+      klass.include(Mixins::Console)
+    end
+  end
+end
+
+module Bytemapper
   Mapper = Classes::Mapper
   Shape = Classes::BM_Shape
   Type = Classes::BM_Type

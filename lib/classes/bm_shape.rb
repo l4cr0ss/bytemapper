@@ -2,30 +2,33 @@ require 'classes/bm_type'
 require 'mixins/bm_wrappable'
 require 'mixins/helpers'
 
-module ByteMapper
+module Bytemapper
   module Classes
     class BM_Shape < Hash
       extend Mixins::Helpers
       extend Mixins::BM_Wrappable
 
-      # If we're wrapping a new object then that means it hasn't already been
-      # wrapped, and if it hasn't already been wrapped then we need to flatten
-      # it to make sure that it isn't isomorphic to something that we *have*
-      # already wrapped and subsequently registered, because if it is then it
-      # means we can just grab that and return it.
-      def self.create(obj, name = nil)
-        obj = self[obj].flatten
-        obj.name = name unless name.nil?
-        obj
+      def self.create(obj, name = nil, wrapped = self.new)
+        if BM_Type.wrap(obj)
+          wrapped[name] = BM_Type.wrap(obj)
+        else 
+          obj.each do |k,v|
+            wrapped[k] = BM_Shape.wrap(v, k)
+          end
+        end
+        wrapped
       end
 
-      def flatten(flattened = BM_Shape.new, prefix = nil)
+      def terminal?(obj)
+      end
+
+      def _flatten(flattened = BM_Shape.new, prefix = nil)
         each do |name, obj|
           # if it's already wrapped then this comes right back
           obj = wrap(obj, name)
-          
+
           if obj.is_a? BM_Shape
-            obj.flatten(flattened, name) 
+            obj = obj.flatten(flattened, name) 
           elsif obj.is_a? BM_Type
             name = prefix.nil? ? name : "#{prefix}_#{name}".to_sym
           elsif obj.is_a? BM_Chunk
@@ -40,11 +43,13 @@ module ByteMapper
 
       private
 
-      def self._can_wrap?(obj)
-        [ 
+      def self.can_wrap?(obj)
+        super
+        return false unless  [
           obj.respond_to?(:each_pair),
-          (obj.flatten.size % 2).zero?
+          obj.respond_to?(:flatten)
         ].reduce(:&)
+        return (obj.flatten.size % 2).zero?
       end
     end
   end
