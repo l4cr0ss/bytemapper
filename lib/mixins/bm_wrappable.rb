@@ -4,6 +4,8 @@ module ByteMapper
   module Mixins
     module BM_Wrappable
 
+      @@registry = Classes::BM_Registry.new
+
       def self.extended(obj)
         obj.instance_exec do 
           define_method(:name) do
@@ -14,19 +16,30 @@ module ByteMapper
             raise "Name must respond to :upcase and :to_sym" unless self.class.valid_name?(value)
             @name = value.upcase.to_sym
           end
-
-          define_method(:registry) do
-            Classes::BM_Registry.instance
+          
+          define_method(:wrap) do |obj, name|
+            self.class.wrap(obj, name)
           end
         end
       end
 
       def wrap(obj, name = nil)
+        # if you got handed a wrapped object just hand it back
         return obj if wrapped?(obj)
+
+        # check the registry for it (and maybe register a new alias)
+        wrapped = @@registry.retrieve(obj, name)
+        return wrapped unless wrapped.nil?
+
+        # if you have to wrap it well make sure it can be done first
         raise ArgumentError.new("#{self} wrapper incompatible with value '#{obj}'") unless can_wrap?(obj)
-        obj = create(obj) 
-        obj.name = name.upcase.to_sym if valid_name?(name)
-        Classes::BM_Registry.instance.register(obj)
+
+        # better nameless than something weird
+        name = name.upcase.to_sym if valid_name?(name)
+
+        # build it and put it in the registry for future use
+        obj = create(obj, name) 
+        @@registry.register(obj)
       end
 
       def wrapped?(obj)

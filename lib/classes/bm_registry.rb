@@ -1,9 +1,6 @@
-require 'singleton'
-
 module ByteMapper
   module Classes
     class BM_Registry
-      include Singleton
       attr_reader :is_wrapped
 
       def initialize()
@@ -17,8 +14,9 @@ module ByteMapper
         obj
       end
 
-      def retrieve(key)
-        return @objstore[key.hash] if @objstore.key?(key.hash)
+      def retrieve(key, name = nil)
+        obj = @objstore[key&.hash]
+        return register_alias(obj, name) if valid_name?(name) && obj
         @objstore[@namestore[format_name(key)]]
       end
 
@@ -28,12 +26,20 @@ module ByteMapper
         @namestore.key?(format_name(key))
       end
 
+      def flush
+        @objstore = {}
+        @namestore = {}
+      end
+
       private
+      
+      def register_alias(obj, name)
+        @namestore[format_name(name)] ||= obj.hash
+        obj
+      end
 
       def format_name(name)
-        return nil unless name
-        name = name.shift while name.respond_to?(:shift)
-        raise ArgumentError.new(invalid_name_error(name)) unless valid_name?(name)
+        return nil unless valid_name?(name)
         name.upcase.to_sym 
       end
 

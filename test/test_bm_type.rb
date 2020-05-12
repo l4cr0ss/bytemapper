@@ -1,7 +1,4 @@
-require 'byebug'
-require 'minitest/autorun'
-require 'classes/bm_type'
-require 'helpers'
+require 'test_helper'
 
 # Test the BMType to make sure it responds in the way you'd expect it to given
 # that it implements the BM_Wrappable interface, and that it can generally

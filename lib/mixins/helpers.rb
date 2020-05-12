@@ -1,12 +1,12 @@
 module ByteMapper
   module Mixins
     module Helpers
-      def self.is_filelike?(candidate)
-        candidate.respond_to?(:file) && candidate.respond_to?(:file?) 
+      def self.is_filelike?(obj)
+        obj.respond_to?(:file) && obj.respond_to?(:file?) 
       end
 
-      def self.is_stringiolike?(candidate)
-        candidate.respond_to?(:read) && candidate.respond_to?(:string) 
+      def self.is_stringiolike?(obj)
+        obj.respond_to?(:read) && obj.respond_to?(:string) 
       end
 
       def self.is_stringlike?(obj)

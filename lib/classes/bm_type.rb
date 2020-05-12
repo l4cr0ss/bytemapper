@@ -7,8 +7,10 @@ module ByteMapper
       extend ::ByteMapper::Mixins::BM_Wrappable
       extend ::ByteMapper::Mixins::Helpers
 
-      def self.create(obj)
-        self.new(obj)
+      def self.create(obj, name = nil)
+        obj = self.new(obj)
+        obj.name = name if self.valid_name?(name)
+        obj
       end
 
       def self._can_wrap?(obj)

@@ -1,15 +1,10 @@
-require 'byebug'
-require 'minitest/autorun'
-require 'classes/bm_registry'
-require 'classes/bm_shape'
-require 'helpers'
+require 'test_helper'
 
 # Test the Shape to make sure it responds in the way you'd expect it to given
 # that it implements the BM_Wrappable interface, and that it can generally
 # handle the different scenarios callers might dream up.
 class TestBMShape < Minitest::Test
   include TestHelpers
-
 
   def test_that_it_does_in_fact_wrap_what_it_is_supposed_to_wrap
     # BM_Shape is a key/value store where each key represents a piece of data
@@ -56,16 +51,35 @@ class TestBMShape < Minitest::Test
     # Moving along, first you wrap the types you'll need...
     BM_Type.wrap([8,'C'], :uint8_t)
 
+
     # ...then you can wrap the definition
     wrapped = BM_Shape.wrap(my_shape, my_name)
 
-    byebug
-    
     # Note that the name *does* get transformed by the wrapper
     assert_equal(wrapped.name, my_name.upcase)
 
+    # Transform them back to the original lowercase for the last comparison
+    wrapped = wrapped.transform_values { |v| v.name.downcase }
+
     # If your implementation is correct then this will succeed:
     assert_equal(wrapped, my_shape)
+  end
+
+  def test_nested_shape_can_be_wrapped
+    byebug
+    BM_Type.wrap([8,'C'], :uint8_t)
+    shape = { 
+      outer: {
+        inner: {
+          i0: :uint8_t,
+          i1: :uint8_t,
+          i2: :uint8_t
+        },
+        o1: :uint8_t
+      }
+    }
+    wrapped = BM_Shape[shape]
+    byebug
   end
 
   def test_unwrappable_object_raises

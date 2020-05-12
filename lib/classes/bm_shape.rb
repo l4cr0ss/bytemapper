@@ -13,30 +13,27 @@ module ByteMapper
       # it to make sure that it isn't isomorphic to something that we *have*
       # already wrapped and subsequently registered, because if it is then it
       # means we can just grab that and return it.
-      def self.create(obj)
-        byebug
-        self[obj].flatten
+      def self.create(obj, name = nil)
+        obj = self[obj].flatten
+        obj.name = name unless name.nil?
+        obj
       end
 
-      def flatten(flattened = {}, prefix = nil)
-        each do |k,v|
-          # Deal with unwrapped values before proceeding
-          unless self.class.wrapped?(v)
-            # Check for a definition in the registry
-            registry.retrieve(v)
-          end
-
-          case v.is_a?
-          when BM_Shape
-            v.flatten(flattened, k) 
-          when BM_Type
-            k = prefix.nil? ? k : "#{prefix}_#{k}".to_sym
-          when BM_Chunk
-            raise "Can't use '#{v.class}' to define a #{self.class}"
+      def flatten(flattened = BM_Shape.new, prefix = nil)
+        each do |name, obj|
+          # if it's already wrapped then this comes right back
+          obj = wrap(obj, name)
+          
+          if obj.is_a? BM_Shape
+            obj.flatten(flattened, name) 
+          elsif obj.is_a? BM_Type
+            name = prefix.nil? ? name : "#{prefix}_#{name}".to_sym
+          elsif obj.is_a? BM_Chunk
+            raise "Can't use '#{obj.class}' to define a #{self.class}"
           else
             raise "Invalid definition while parsing #{self.class}"
           end
-          flattened[k] = v
+          flattened[name] = obj
         end
         flattened
       end
