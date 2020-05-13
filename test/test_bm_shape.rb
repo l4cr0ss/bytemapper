@@ -43,26 +43,31 @@ class TestBMShape < Minitest::Test
 
     # Ok.. notice that those definitions are nice and friendly when you type
     # them but they don't mean much without some sort of mapping back to the
-    # BM_Type. That's why the BM_Registry exists. It holds the mapping.
+    # BM_Type. The `wrap(..)` function takes care of doing that. As it walks
+    # through the definition it resolves strings/symbols it encounters.
     #
-    # BM_Shape and BM_Type both have access to the registry as implementors of
-    # the BM_Wrappable interface. Look over there for more info.
-
-    # Moving along, first you wrap the types you'll need...
+    # In order for that string or symbol to resolve meaningfully its necessary
+    # to first wrap a type using that symbol. So, first, wrap the types you'll
+    # need. When you do that, BM_Type will register it in a namespace that it
+    # shares with BM_Shape so that it's available for resolution.
     BM_Type.wrap([8,'C'], :uint8_t)
-
 
     # ...then you can wrap the definition
     wrapped = BM_Shape.wrap(my_shape, my_name)
 
-    # Note that the name *does* get transformed by the wrapper
-    #assert_equal(wrapped.name, my_name.upcase)
+    # The name gets upcased:
+    assert_equal(my_name.upcase, wrapped.name)
 
-    # Transform them back to the original lowercase for the last comparison
-    #wrapped = wrapped.transform_values { |v| v.name.downcase }
+    # Symbolic references to BM_Types, if any, are resolved:
+    expect = my_shape.values.map { |v| BM_Type.retrieve(v.upcase) }
+    actual = wrapped.values
+    assert_equal(expect, actual)
 
-    # If your implementation is correct then this will succeed:
-    #assert_equal(wrapped, my_shape)
+    # Shape members are mapped onto the instance for easy access
+
+    # Member definitions can be transformed back to symbols with `to_sym`
+
+
   end
 
   def test_basic_wrap
@@ -106,8 +111,7 @@ class TestBMShape < Minitest::Test
     # If the thing you give to BM_Shape to be wrapped isn't something that it
     # can wrap, it's going to raise an exception. 
     not_shape = [16, 'S']
-    expect = "#{BM_Shape} wrapper incompatible with value '#{not_shape}'"
-    #invalid = assert_raises(ArgumentError) { BM_Shape.wrap(not_shape, :uint16_t) }
-    #assert_equal(expect, invalid.message)
+    
+    assert_raises(ArgumentError) { BM_Shape.wrap(not_shape, :uint16_t) }
   end
 end
