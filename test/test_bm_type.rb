@@ -6,8 +6,7 @@ require 'test_helper'
 class TestBMType < Minitest::Test
   include TestHelpers
 
-
-  def test_that_it_does_in_fact_wrap_what_it_is_supposed_to_wrap
+  def test_bm_type_wraps_typelike_objects
     # The 'big idea' behind BM_Type is that the width of a numeric type (short,
     # long, uint16, etc) and the corresponding String#unpack(..) directives for
     # that type get assigned a name. 
@@ -32,9 +31,7 @@ class TestBMType < Minitest::Test
     # If the thing you give to BM_Type to be wrapped isn't something that it
     # can wrap, it's going to raise an exception. 
     not_type = { a_shape: [16, 'S'] }
-    expect = "#{BM_Type} wrapper incompatible with value '#{not_type}'"
-    invalid = assert_raises(ArgumentError) { BM_Type.wrap(not_type, :uint16_t) }
-    assert_equal(expect, invalid.message)
+    assert_raises(RuntimeError) { BM_Type.wrap(not_type, :uint16_t) }
   end
 end
 

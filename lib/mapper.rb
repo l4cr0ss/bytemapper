@@ -1,4 +1,3 @@
-require 'classes/bm_registry'
 require 'classes/bm_type'
 require 'classes/bm_shape'
 require 'classes/bm_chunk'

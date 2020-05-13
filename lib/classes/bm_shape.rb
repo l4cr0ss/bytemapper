@@ -1,55 +1,98 @@
 require 'classes/bm_type'
-require 'mixins/bm_wrappable'
-require 'mixins/helpers'
+require 'mixins/registry'
 
 module Bytemapper
   module Classes
     class BM_Shape < Hash
-      extend Mixins::Helpers
-      extend Mixins::BM_Wrappable
+      include Bytemapper::Registry
 
-      def self.create(obj, name = nil, wrapped = self.new)
-        if BM_Type.wrap(obj)
-          wrapped[name] = BM_Type.wrap(obj)
-        else 
-          obj.each do |k,v|
-            wrapped[k] = BM_Shape.wrap(v, k)
-          end
-        end
-        wrapped
+      def name
+        @name
       end
 
-      def terminal?(obj)
+      def name=(value)
+        @name = self.class.format_name(value)
       end
 
-      def _flatten(flattened = BM_Shape.new, prefix = nil)
-        each do |name, obj|
-          # if it's already wrapped then this comes right back
-          obj = wrap(obj, name)
-
-          if obj.is_a? BM_Shape
-            obj = obj.flatten(flattened, name) 
-          elsif obj.is_a? BM_Type
-            name = prefix.nil? ? name : "#{prefix}_#{name}".to_sym
-          elsif obj.is_a? BM_Chunk
-            raise "Can't use '#{obj.class}' to define a #{self.class}"
+      def flatten(flattened = BM_Shape.new, prefix = nil)
+        each do |k,v|
+          if v.is_a?(Hash)
+            k = prefix.nil? ?  k : "#{prefix}_#{k}".to_sym
+            v.flatten(flattened, k)
           else
-            raise "Invalid definition while parsing #{self.class}"
+            k = prefix.nil? ?  k : "#{prefix}_#{k}".to_sym
+            flattened[k] = v
           end
-          flattened[name] = obj
         end
         flattened
       end
 
-      private
+      class << self
+        def wrap(obj, name, wrapped = self.new)
+          if obj.is_a?(Array)
+            wrapped = BM_Type.wrap(obj, name)
+          elsif obj.is_a?(Hash)
+            obj.each do |k,v|
+              wrapped[k] = wrap(v, k)
+            end
+            wrapped
+          elsif obj.is_a?(String) || obj.is_a?(Symbol)
+            wrapped = wrap(retrieve(obj), obj)
+          else
+            raise "Invalid shape definition"
+          end
+          wrapped
+        end
 
-      def self.can_wrap?(obj)
-        super
-        return false unless  [
-          obj.respond_to?(:each_pair),
-          obj.respond_to?(:flatten)
-        ].reduce(:&)
-        return (obj.flatten.size % 2).zero?
+        def register(obj, name)
+          Registry.const_set(name, obj)
+        end
+
+        def registered?(name)
+          return false unless name.is_a?(Symbol)
+          Registry.const_defined?(name.upcase.to_sym)
+        end
+
+        def retrieve(obj, name = nil)
+          name = obj if name.nil?
+          Registry.const_get(name.upcase)
+        end
+
+        def validate(obj, name)
+          [
+            format_obj(obj),
+            format_name(name)
+          ]
+        end
+
+        def valid_obj?(obj)
+          valid_type?(obj) || valid_shape?(obj) || obj.is_a?(Symbol)
+        end
+
+        def valid_shape?(obj)
+          obj.is_a?(Hash)
+        end
+
+        def valid_type?(obj)
+          obj.is_a?(Array)
+        end
+
+        def valid_name?(name)
+          [
+            name.respond_to?(:upcase),
+            name.respond_to?(:to_sym)
+          ].reduce(:&)
+        end
+
+        def format_name(name)
+          raise "Bad name" unless valid_name?(name)
+          name.upcase.to_sym
+        end
+
+        def format_obj(obj)
+          return obj if valid_shape?(obj)
+          obj
+        end
       end
     end
   end
