@@ -5,7 +5,6 @@ module Bytemapper
   module Classes
     class BM_Shape < Hash
       include Bytemapper::Registry
-      alias_method :members, :keys
 
       def name
         @name
@@ -15,8 +14,9 @@ module Bytemapper
         @name = self.class.format_name(value)
       end
 
-      def to_sym(flatten = false)
-        transform_values { |v| v.name.downcase }
+      def []=(key, val)
+        super
+        define_singleton_method(key.to_sym) { fetch(key) } unless respond_to?(key.to_sym)
       end
 
       def flatten(flattened = BM_Shape.new, prefix = nil)

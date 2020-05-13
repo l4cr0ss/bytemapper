@@ -6,7 +6,7 @@ require 'test_helper'
 class TestBMShape < Minitest::Test
   include TestHelpers
 
-  def test_that_it_does_in_fact_wrap_what_it_is_supposed_to_wrap
+  def test_basic_wrap
     # BM_Shape is a key/value store where each key represents a piece of data
     # embedded in a byte string. That data can look like one of two things.
     # Which thing it looks like depends on the value of the key in question,
@@ -62,41 +62,37 @@ class TestBMShape < Minitest::Test
     expect = my_shape.values.map { |v| BM_Type.retrieve(v.upcase) }
     actual = wrapped.values
     assert_equal(expect, actual)
-
-    # Shape members are mapped onto the instance for easy access
-
-    # Member definitions can be transformed back to symbols with `to_sym`
-
-
-  end
-
-  def test_basic_wrap
-    type = BM_Type.wrap([8,'C'], :uint8_t)
-    shape = {
-      shape: { 
-        m0: type
-      }
-    }
-    expect = shape
-    actual = BM_Shape.wrap(shape, :shape)
-    assert_equal(expect, actual)
   end
 
   def test_nested_shape_equals_flattened_shape
+    # The `flatten()` function offers a way of collapsing nested shapes into a
+    # 1-dim array so that the definitions can be walked when it's time to apply
+    # them to a byte string.
+    #
+    # You'll see that it concatenates the names of the nested shapes it
+    # flattens, adding them together each time it recurses to build a prefix
+    # for each leaf node it ultimately encounters.
+    #
+    # You'll also notice that it proceeds in a depth first manner, in order
+    # that the sequence of the types is preserved in the final list. This is
+    # important when the entire point is to have these types describing
+    # specific offsets into a byte string.
     BM_Type.wrap([8,'C'], :uint8_t)
     flattened = {
-      outer0_inner0_i0: :uint8_t,
-      outer0_inner0_i1: :uint8_t,
-      outer0_inner0_i2: :uint8_t,
+      outer0_middle0_inner0: :uint8_t,
+      outer0_middle0_inner1: :uint8_t,
+      outer0_middle0_inner2: :uint8_t,
+      outer0_middle1: :uint8_t,
       outer1: :uint8_t
     }
     nested = {
       outer0: {
-        inner0: {
-          i0: :uint8_t,
-          i1: :uint8_t,
-          i2: :uint8_t
-        }
+        middle0: {
+          inner0: :uint8_t,
+          inner1: :uint8_t,
+          inner2: :uint8_t
+        },
+        middle1: :uint8_t
       },
       outer1: :uint8_t
     }
@@ -107,11 +103,50 @@ class TestBMShape < Minitest::Test
     assert_equal(expect, actual)
   end
 
-  def test_unwrappable_object_raises
+  def test_name
+    # Every shape has a name, whether nested or flat. It's unique across
+    # shapes and types and is what's used to define and resolve symbolic
+    # references in literal definitions. The name gets uppercased and
+    # symbolized as part of the wrapping process.
+    BM_Type.wrap([8,'C'], :uint8_t)
+    obj = BM_Shape.wrap({'outer': { 'inner': :uint8_t }}, 'test_name')
+    assert_equal(:TEST_NAME, obj.name)
+    assert_equal(:OUTER, obj[:outer].name)
+    assert_equal(:INNER, obj[:outer][:inner].name)
+  end
+
+  def test_convenience_accessors
+    # Shape is a subclass of the native Hash class and it overrides the []
+    # operator so that when a new member is added to the shape it becomes
+    # accessible via the dot operator.
+    inner0 = BM_Type.wrap([8,'C'], :uint8_t)
+    middle1 = BM_Type.wrap([16,'S'], :uint16_t)
+    outer1 = BM_Type.wrap([32,'L'], :uint32_t)
+    obj = BM_Shape.wrap(
+      {
+        outer0: { 
+          middle0: {
+            inner0: :uint8_t
+          },
+          middle1: :uint16_t,
+        },
+        outer1: :uint32_t
+      }, :test_convenience_accessors)
+    assert_equal(obj[:outer0], obj.outer0 )
+    assert_equal(obj[:outer0][:middle0], obj.outer0.middle0)
+    assert_equal(obj[:outer0][:middle0][:inner0], obj.outer0.middle0.inner0)
+    assert_equal(inner0, obj.outer0.middle0.inner0)
+    assert_equal(obj[:outer0][:middle1], obj.outer0.middle1)
+    assert_equal(middle1, obj.outer0.middle1)
+    assert_equal(obj[:outer1], obj.outer1)
+    assert_equal(outer1, obj.outer1)
+  end
+
+  def test_invalid_wrap
     # If the thing you give to BM_Shape to be wrapped isn't something that it
     # can wrap, it's going to raise an exception. 
     not_shape = [16, 'S']
-    
+
     assert_raises(ArgumentError) { BM_Shape.wrap(not_shape, :uint16_t) }
   end
 end
