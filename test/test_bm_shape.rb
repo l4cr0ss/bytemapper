@@ -104,15 +104,39 @@ class TestBMShape < Minitest::Test
   end
 
   def test_name
-    # Every shape has a name, whether nested or flat. It's unique across
-    # shapes and types and is what's used to define and resolve symbolic
-    # references in literal definitions. The name gets uppercased and
-    # symbolized as part of the wrapping process.
+    # Shapes can have names. Names are unique across shapes and types and are
+    # what's used to define and resolve symbolic references in literal
+    # definitions. The name gets uppercased and symbolized as part of the
+    # wrapping process.
     BM_Type.wrap([8,'C'], :uint8_t)
     obj = BM_Shape.wrap({'outer': { 'inner': :uint8_t }}, 'test_name')
     assert_equal(:TEST_NAME, obj.name)
     assert_equal(:OUTER, obj[:outer].name)
     assert_equal(:INNER, obj[:outer][:inner].name)
+  end
+
+  def test_anonymous_wrap
+    # It's possible to wrap a shape without a name and end up with an anonymous
+    # shape (one without a name). However! If you've previously wrapped the
+    # same definition _with_ a name then when `wrap()` returns you the wrapped
+    # shape it will have come from the registry and will have a list of all the
+    # names referencing that definition accessible via the `aliases` attribute.
+    #
+    # Example:
+
+    # Wrap a type definition to use in the shape definition.
+    BM_Type.wrap([8,'C'], :uint8_t)
+
+    # As discussed, first wrap the shape with a name so it gets registered.
+    obj = BM_Shape.wrap({'outer': { 'inner': :uint8_t }}, :test_anon_wrap)
+
+    # Now wrap the shape again, but without passing a name, and assert that
+    # the object you get back has name, that it's the same name. and that the
+    # objects are equal.
+    anon = BM_Shape.wrap({'outer': { 'inner': :uint8_t }})
+    assert_equal(true, anon.name.nil?)
+    assert_equal(true, anon.aliases.include?(obj.name))
+    assert_equal(obj, anon)
   end
 
   def test_convenience_accessors
@@ -140,6 +164,30 @@ class TestBMShape < Minitest::Test
     assert_equal(middle1, obj.outer0.middle1)
     assert_equal(obj[:outer1], obj.outer1)
     assert_equal(outer1, obj.outer1)
+  end
+
+  def test_registry_cache
+    # Shapes, like types, get registered by their name as part of the wrapping
+    # process, making them available for reuse. This test makes sure that when
+    # you are wrapping a shape this cache gets checked and used when possible. It
+    # serves two purposes: (1) it greatly reduces the possibility (anything's
+    # possible amirite LOL) of having two shapes with the same name but different
+    # contents, and (2) it gives a very (very) small performance boost. 
+    BM_Type.wrap([8,'C'], :uint8_t)
+
+    # The test works by taking advantage of the fact that the registry will not
+    # overwrite an existing name <-> object registration unless explicitly
+    # requested. 
+    obj1 = BM_Shape.wrap({ member: :uint8_t }, :test_registry_cache)  
+    assert_equal(true, BM_Shape.registered?(:test_registry_cache))
+
+    # So, by wrapping a new, different, object under a known registered name you can
+    # assert that the actual object returned will be the one originally
+    # registered to the name, and in doing so test that the registry is
+    # actually being used.
+    obj2 = BM_Shape.wrap({ member: :uint8_t, other: :uint_t }, :test_registry_cache)
+    assert_equal(obj1, obj2)
+    assert_equal(obj2, BM_Shape.retrieve(:test_registry_cache))
   end
 
   def test_invalid_wrap

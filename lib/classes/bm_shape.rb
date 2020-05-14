@@ -6,6 +6,14 @@ module Bytemapper
     class BM_Shape < Hash
       include Bytemapper::Registry
 
+      attr_accessor :aliases
+
+      def initialize
+        super
+        @name = nil
+        @aliases = nil
+      end
+
       def name
         @name
       end
@@ -34,21 +42,20 @@ module Bytemapper
 
       class << self
         def register(obj, name)
-          Registry.const_set(name, obj)
+          Registry.register(obj)
         end
 
-        def registered?(name)
-          return false unless name.is_a?(Symbol)
-          Registry.const_defined?(name.upcase.to_sym)
+        def registered?(key, name = nil)
+          obj = Registry.registered?(key)
+          obj || Registry.registered?(name)
         end
 
         def retrieve(obj, name = nil)
-          name = obj if name.nil?
-          Registry.const_get(name.upcase)
+          Registry.retrieve(obj, name)
         end
 
         def format_name(name)
-          raise "Bad name" unless valid_name?(name)
+          raise "Bad name: '#{name}'" unless valid_name?(name)
           name.upcase.to_sym
         end
 
@@ -57,9 +64,12 @@ module Bytemapper
           obj
         end
 
-        def wrap(obj, name)
+        def wrap(obj, name = nil, force = false)
           raise ArgumentError.new("Invalid shape definition, '#{obj}'") unless obj.is_a?(Hash)
-          _wrap(obj, name)
+          # Check if it exists already to prevent re-wrapping
+          return retrieve(obj, name) if registered?(obj, name)
+          wrapped = _wrap(obj, name)
+          self.register(wrapped, wrapped.name)
         end
 
         private

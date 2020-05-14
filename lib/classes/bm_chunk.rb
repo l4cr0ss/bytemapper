@@ -7,7 +7,7 @@ module Bytemapper
         @bytes = bytes
         @shape = shape
         @endian = endian
-        _map(shape)
+        _map(shape.flatten)
       end
 
       private

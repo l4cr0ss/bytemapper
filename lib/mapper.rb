@@ -4,34 +4,31 @@ require 'classes/bm_chunk'
 require 'mixins/helpers'
 
 module Bytemapper
-  module Classes
-    class Mapper
-      include Mixins::Helpers
+  module Mapper
+    BM_Type = ::Bytemapper::Classes::BM_Type
+    BM_Shape = ::Bytemapper::Classes::BM_Shape
+    BM_Chunk = ::Bytemapper::Classes::BM_Chunk
 
-      def map(bytes, shape, endian = nil)
-        # if you get a BM_Shape just use it to build the chunk
-        return BM_Chunk.new(bytes, shape, endian) if shape.is_a?(BM_Shape) 
+    def define_type(obj, name)
+    end
 
-        # otherwise try and wrap it. if it fails you have to raise.
-        wrapped = BM_Shape.wrap(shape)
-        wrapped.nil? ? raise("Unable to map #{shape.class}; try wrapping it first") : wrapped
+    def map(bytes, shape, name = nil, endian = nil) 
+      bytes = format_bytes(bytes)
+      return BM_Chunk.new(bytes, shape, endian) if shape.is_a?(BM_Shape)
+      raise ArgumentError.new("Invalid shape definition, '#{shape}'") unless shape.is_a?(Hash)
+      shape = BM_Shape.wrap(shape, name)
+      BM_Chunk.new(bytes, shape, endian)
+
+    end 
+
+    def format_bytes(bytes)
+      if Mixins::Helpers.is_filelike?(bytes)
+         raise ArgumentError("Mapping directly from file not supported; read the bytes first")
+      elsif Mixins::Helpers.is_stringiolike?(bytes)
+        bytes = bytes.string
       end
-
-      def format_bytes(bytes)
-        if Helpers::is_filelike?(bytes)
-           raise ArgumentError("Mapping directly from file not supported; read the bytes first")
-        elsif Helpers::is_stringiolike?(bytes)
-          bytes = bytes.string
-        end
-        bytes = bytes.force_encoding(Encoding::ASCII_8BIT) unless bytes.encoding == Encoding::ASCII_8BIT
-      end
-
-
-      # The only two classes that make sense for this call are BM_Type and
-      # BM_Shape
-      def valid_class?(klass)
-        [BM_Shape, BM_Type].include?(klass)
-      end
+      bytes = bytes.force_encoding(Encoding::ASCII_8BIT) unless bytes.encoding == Encoding::ASCII_8BIT
+      StringIO.new(bytes)
     end
   end
 end
