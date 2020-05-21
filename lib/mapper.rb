@@ -8,6 +8,20 @@ module Bytemapper
     BM_Type = ::Bytemapper::Classes::BM_Type
     BM_Shape = ::Bytemapper::Classes::BM_Shape
     BM_Chunk = ::Bytemapper::Classes::BM_Chunk
+    BasicTypes = {
+     uint8_t: [8,'C'],
+     uint16_t: [16,'S'],
+     uint32_t: [32,'L'],
+     uint64_t: [64,'Q'],
+     int8_t:  [8,'c'],
+     int16_t: [16,'s'],
+     int32_t: [32,'l'],
+     int64_t: [64,'q']
+    }
+
+    def self.included(klass) do
+      BasicTypes.each { |name, obj| BM_Type.wrap(obj, name) }
+    end
 
     def register_type(obj, name)
       BM_Type.wrap(obj, name)
