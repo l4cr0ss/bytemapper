@@ -11,7 +11,7 @@ module Bytemapper
       def initialize
         super
         @name = nil
-        @aliases = nil
+        @aliases = []
       end
 
       def name
@@ -41,17 +41,19 @@ module Bytemapper
       end
 
       class << self
-        def register(obj, name)
+        def register(obj)
           Registry.register(obj)
         end
 
         def registered?(key, name = nil)
           obj = Registry.registered?(key)
+          name = obj.respond_to?(:name) ? obj.name : obj if name.nil?
+          register_alias(obj, name) if obj && obj.name != name
           obj || Registry.registered?(name)
         end
 
-        def retrieve(obj, name = nil)
-          Registry.retrieve(obj, name)
+        def retrieve(obj)
+          Registry.registered?(obj)
         end
 
         def format_name(name)
@@ -64,12 +66,18 @@ module Bytemapper
           obj
         end
 
+        def register_alias(obj, name)
+          obj.name = name
+          Registry.register(obj)
+        end
+
         def wrap(obj, name = nil, force = false)
-          raise ArgumentError.new("Invalid shape definition, '#{obj}'") unless obj.is_a?(Hash)
+          raise ArgumentError.new("Invalid shape definition, '#{obj}'") unless obj.is_a?(Hash) || obj.is_a?(Symbol) || obj.is_a?(String)
           # Check if it exists already to prevent re-wrapping
-          return retrieve(obj, name) if registered?(obj, name)
+          wrapped = registered?(obj, name)
+          return wrapped if wrapped
           wrapped = _wrap(obj, name)
-          self.register(wrapped, wrapped.name)
+          self.register(wrapped)
         end
 
         private

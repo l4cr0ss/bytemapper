@@ -5,6 +5,8 @@ module Bytemapper
     class BM_Type < Array
       include Bytemapper::Registry
 
+      attr_reader :aliases
+
       def name
         @name
       end
@@ -13,22 +15,31 @@ module Bytemapper
         @name = self.class.format_name(value)
       end
 
+      def initialize(*)
+        super
+        @name = nil
+        @aliases = []
+      end
+
       class << self
-        def wrap(obj, name)
-          obj, name = validate(obj, name)
-          return retrieve(name) if registered?(name)
-          obj = new(obj)
-          obj.name = name
-          register(obj, name) unless registered?(name)
-          obj
+        def wrap(obj, name = nil, force = false)
+          raise ArgumentError.new("Invalid type definition, '#{obj}'") unless obj.is_a?(Array) || obj.is_a?(Symbol) || obj.is_a?(String)
+          # Check if it exists already to prevent re-wrapping
+          wrapped = registered?(obj, name)
+          return wrapped if wrapped
+          wrapped = new(obj)
+          wrapped.name = name unless name.nil?
+          self.register(wrapped)
         end
 
-        def register(obj, name)
-          Registry.const_set(name, obj)
+        def register(obj)
+          Registry.register(obj)
         end
 
-        def registered?(name)
-          Registry.const_defined?(name)
+        def registered?(key, name = nil)
+          obj = Registry.registered?(key)
+          register_alias(obj, name) if obj && obj.name != name
+          obj || Registry.registered?(name)
         end
 
         def retrieve(name)
@@ -67,6 +78,11 @@ module Bytemapper
         def format_obj(obj)
           raise "Bad obj" unless valid_obj?(obj)
           obj
+        end
+
+        def register_alias(obj, name)
+          obj.name = name
+          Registry.register(obj)
         end
       end
     end

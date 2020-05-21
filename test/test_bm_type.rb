@@ -31,7 +31,7 @@ class TestBMType < Minitest::Test
     # If the thing you give to BM_Type to be wrapped isn't something that it
     # can wrap, it's going to raise an exception. 
     not_type = { a_shape: [16, 'S'] }
-    assert_raises(RuntimeError) { BM_Type.wrap(not_type, :uint16_t) }
+    assert_raises(ArgumentError) { BM_Type.wrap(not_type, :uint16_t) }
   end
 end
 

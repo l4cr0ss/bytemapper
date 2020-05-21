@@ -9,13 +9,19 @@ module Bytemapper
     BM_Shape = ::Bytemapper::Classes::BM_Shape
     BM_Chunk = ::Bytemapper::Classes::BM_Chunk
 
-    def define_type(obj, name)
+    def register_type(obj, name)
+      BM_Type.wrap(obj, name)
+    end
+    
+    def wrap(obj, name)
+      BM_Shape.wrap(obj, name)
     end
 
     def map(bytes, shape, name = nil, endian = nil) 
       bytes = format_bytes(bytes)
       return BM_Chunk.new(bytes, shape, endian) if shape.is_a?(BM_Shape)
-      raise ArgumentError.new("Invalid shape definition, '#{shape}'") unless shape.is_a?(Hash)
+      raise ArgumentError.new("Invalid shape definition, '#{shape}'") unless shape.is_a?(Hash) || shape.is_a?(Symbol) || shape.is_a?(String)
+      name = shape if name.nil? && shape.is_a?(String) || shape.is_a?(Symbol)
       shape = BM_Shape.wrap(shape, name)
       BM_Chunk.new(bytes, shape, endian)
 

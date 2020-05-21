@@ -179,7 +179,7 @@ class TestBMShape < Minitest::Test
     # overwrite an existing name <-> object registration unless explicitly
     # requested. 
     obj1 = BM_Shape.wrap({ member: :uint8_t }, :test_registry_cache)  
-    assert_equal(true, BM_Shape.registered?(:test_registry_cache))
+    refute_nil(BM_Shape.registered?(:test_registry_cache))
 
     # So, by wrapping a new, different, object under a known registered name you can
     # assert that the actual object returned will be the one originally

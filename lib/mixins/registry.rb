@@ -1,6 +1,5 @@
-
 module Bytemapper
-  # As part of wrapping process type/shape/chunk definitions are added here
+  # As part of wrapping process type/shape definitions are added here
   module Registry
     # Definitions wrapped without a name go here
     ANONYMOUS = Set[]
@@ -11,6 +10,8 @@ module Bytemapper
         # It only works with wrapped objects.
         raise "Only wrapped objects can be registered" unless wrapper?(obj)
         return anonymous(obj) if nameless?(obj)
+        # When you register an object delist it from the anon list.
+        ANONYMOUS.delete(obj) 
         const_set(obj.name, obj) unless registered?(obj.name)
       end
 
@@ -18,15 +19,15 @@ module Bytemapper
         return anonymous?(obj) if nameless?(obj)
         name = wrapper?(obj) ? obj.name : obj
         name = format_name(name)
-        const_defined?(name) unless name.nil?
-      end
-
-      def retrieve(obj, name = nil)
-        name = obj if name.nil?
-        obj = const_get(name.upcase)
+        _registered?(name)
       end
 
       private
+
+      def _registered?(name)
+        return false unless valid_name?(name)
+        const_get(name) if const_defined?(name)
+      end
 
       def wrapper?(obj)
         # Check if your object is wrapper class
