@@ -1,9 +1,10 @@
-require 'mixins/registry'
+require 'classes/bm_registry'
 
 module Bytemapper
   module Classes
     class BM_Type < Array
-      include Bytemapper::Registry
+
+      Registry = Bytemapper::Classes::BM_Registry.instance
 
       attr_reader :aliases
 
@@ -22,9 +23,27 @@ module Bytemapper
       end
 
       class << self
-        def wrap(obj, name = nil, force = false)
-          raise ArgumentError.new("Invalid type definition, '#{obj}'") unless obj.is_a?(Array) || obj.is_a?(Symbol) || obj.is_a?(String)
-          # Check if it exists already to prevent re-wrapping
+        # Wraps the given object as a BM_Type, optionally naming (or aliasing) it
+        # as appropriate.
+        # 
+        # @param name [Array] The object to be wrapped.
+        # @return [BM_Type] The wrapped object.
+        def wrap(obj, name = nil)
+          registration = Registry.registered?(obj, name)
+
+          if registration
+            # the object is registered..
+            if registration[:name].nil?
+              # ..but not under this name
+            else
+            end
+          else
+            # if name is *not* nil then the value in obj may be one of:
+            # 1. a type literal (i.e. [8, 'C'])
+            # 2. a BM_Type object (i.e. already wrapped)
+            # and the value in name must respond like a string or symbol
+
+          end
           wrapped = registered?(obj, name)
           return wrapped if wrapped
           wrapped = new(obj)
@@ -32,19 +51,21 @@ module Bytemapper
           self.register(wrapped)
         end
 
+        def type_literal?(obj)
+          obj.is_a?(Array) && !obj.is_a?(BM_Type)
+        end
+
+        def name_literal?(name)
+          obj.is_a?(Symbol) || obj.is_a?(String)
+        end
+
         def register(obj)
-          Registry.register(obj)
         end
 
         def registered?(key, name = nil)
-          obj = Registry.registered?(key)
-          register_alias(obj, name) if obj && obj.name != name
-          obj || Registry.registered?(name)
         end
 
         def retrieve(name)
-          name = format_name(name)
-          Registry.const_get(name)
         end
 
         def validate(obj, name)

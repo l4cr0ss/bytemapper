@@ -37,7 +37,6 @@ class TestBMType < Minitest::Test
   def test_type_aliases
     # If you register a type under different names...
     BM_Type.wrap([8,'C'], :type1_t)
-    byebug
     BM_Type.wrap([8,'C'], :type2_t)
 
     # ..then any of those names can be used to retrieve that type.
