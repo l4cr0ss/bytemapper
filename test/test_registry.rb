@@ -1,12 +1,11 @@
 require 'test_helper'
-require 'mixins/registry'
+require 'classes/registry'
 require 'mapper' 
 
 class TestRegistry <  Minitest::Test
   # When type and shape definitions are wrapped the instance is stored in the
   # registry so it can be reused the next time you ask for that definition. 
   include TestHelpers
-  Registry = ::Bytemapper::Registry
 
   def test_registration
   end

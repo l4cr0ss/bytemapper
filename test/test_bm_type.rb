@@ -33,6 +33,24 @@ class TestBMType < Minitest::Test
     not_type = { a_shape: [16, 'S'] }
     assert_raises(ArgumentError) { BM_Type.wrap(not_type, :uint16_t) }
   end
+
+  def test_type_aliases
+    # If you register a type under different names...
+    BM_Type.wrap([8,'C'], :type1_t)
+    byebug
+    BM_Type.wrap([8,'C'], :type2_t)
+
+    # ..then any of those names can be used to retrieve that type.
+    assert_equal([8,'C'], BM_Type.retrieve(:type1_t))
+    assert_equal([8,'C'], BM_Type.retrieve(:type2_t))
+
+    # ..each will be named accordingly
+    assert_equal(:type1_t.upcase, BM_Type.retrieve(:type1_t).name)
+    assert_equal(:type2_t.upcase, BM_Type.retrieve(:type2_t).name)
+
+    # ..and each will have the others as aliases
+    assert_equal(true, BM_Type.retrieve(:type1_t).aliases.include?(:type2_t.upcase))
+    assert_equal(true, BM_Type.retrieve(:type2_t).aliases.include?(:type1_t.upcase))
+
+  end
 end
-
-

@@ -1,3 +1,4 @@
+require 'byebug'
 require 'classes/bm_type'
 require 'classes/bm_shape'
 require 'classes/bm_chunk'
@@ -8,6 +9,7 @@ module Bytemapper
     BM_Type = ::Bytemapper::Classes::BM_Type
     BM_Shape = ::Bytemapper::Classes::BM_Shape
     BM_Chunk = ::Bytemapper::Classes::BM_Chunk
+
     BasicTypes = {
      uint8_t: [8,'C'],
      uint16_t: [16,'S'],
@@ -16,11 +18,14 @@ module Bytemapper
      int8_t:  [8,'c'],
      int16_t: [16,'s'],
      int32_t: [32,'l'],
-     int64_t: [64,'q']
+     int64_t: [64,'q'],
+     bool: [8,'C']
     }
 
-    def self.included(klass) do
-      BasicTypes.each { |name, obj| BM_Type.wrap(obj, name) }
+    def self.included(klass)
+      klass.instance_eval do
+        BasicTypes.each { |name, obj| BM_Type.wrap(obj, name) }
+      end
     end
 
     def register_type(obj, name)
@@ -28,6 +33,7 @@ module Bytemapper
     end
     
     def wrap(obj, name)
+      byebug
       BM_Shape.wrap(obj, name)
     end
 

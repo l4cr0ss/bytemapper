@@ -2,46 +2,51 @@
 
 ## What is it?
 
-A convenient tool that lets you use user-defined templates - called shapes - to
-map arbitrary byte strings to Ruby objects.
+A way to model and interact with arbitrary byte strings as Ruby objects.
 
-For example:
+Example:
 
-```ruby
-shape = {
-          b0: :uint8_t,
-          b1: :uint8_t,
-          b2: :uint8_t,
-          b3: :uint8_t
-        }
+Consider this struct that models the state of a keyboard switch:
 
-bytes = '\xC0\xDE\xBA\xBE' 
-
-
-
+```c
+typedef struct {
+    uint8_t timestamp;
+    volatile bool hardwareSwitchState : 1;
+    bool debouncedSwitchState : 1;
+    bool current : 1;
+    bool previous : 1;
+    bool debouncing : 1;
+} key_state_t;
 ```
 
-Use case: caller has bytes he knows the endianness of that he wants to map to a
-struct that he knows the name of.
+And this string of bytes representing an instance of the above struct:
 
-1. Instantiate mapper with a C struct to map bytes to
+```ruby
+bytes = "\x35\x31\x30\x39\x30\x31\x38\x35\x34\x33\x00\x01\x01\x01"
+```
 
-2.  Pass bytes, name and endianness to mapper
-  StructMapper.map(bytes, endianness, name)
+By rewriting the struct like this:
 
-  bytes - a byte string
-  endianess - either '<' or '>' or nil. Passed to String#unpack. 
-  name - the name of the class that will be returned
+```ruby
+# These definitions are called "shapes"
+shape = {
+  timestamp: :uint8_t, # these types come for free with the library
+  hardwareSwitchState: :bool,
+  debouncedSwitchState: :bool,
+  current: :bool,
+  previous: :bool, # you can define custom types, or alias the prepackaged types
+  debouncing: :bool
+}
+```
 
-3. Mapper uses name to create new container object
+You can wrap the bytes into a `BM_Chunk`, like this:
 
-4. Mapper uses size info in struct definition + endianness passed by caller to
-   map bytes into container
+```ruby
+keystate = BM_Chunk.wrap(bytes, shape, :key_state_t)
+keystate.class
+```
 
-  String#unpack the bytes and map them into the container created in step 3
+And with this object, you can access all the fields of the original struct by name!
 
-5. Mapper attaches struct definition to the container
-
-  Attach the definition to the container for future serialization
-
-6. Mapper returns container to caller
+```ruby
+```

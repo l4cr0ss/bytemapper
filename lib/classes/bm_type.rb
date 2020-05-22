@@ -43,6 +43,7 @@ module Bytemapper
         end
 
         def retrieve(name)
+          name = format_name(name)
           Registry.const_get(name)
         end
 
