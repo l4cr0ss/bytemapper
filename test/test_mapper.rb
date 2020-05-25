@@ -4,7 +4,7 @@ require 'mapper'
 class TestMapper <  Minitest::Test
   # The idea is that this class implements the public API of the library so
   # that it can be included in other projects. That's in contrast to the
-  # Bytemapper module, which re-wraps these endpoints for easy
+  # Bytemapper module, which re-registers these endpoints for easy
   # command-line/console usage.
   include Bytemapper::Mapper
   attr_reader :bytes
@@ -45,12 +45,13 @@ class TestMapper <  Minitest::Test
     shape = {
       header: {
         type: :uint8_t,
-        data: BM_Type.wrap([8,'C'],:u8),
+        data: BM_Registry.register([8,'C'],:u8),
       },
       type: :u8,
       data: :u8,
       more: :u8
     };
+    byebug
     chunk = map(bytes, shape)
     assert_equal(1, chunk.header_type)
     assert_equal(2, chunk.header_data)

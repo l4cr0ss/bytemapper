@@ -11,10 +11,10 @@ class TestBMShape < Minitest::Test
     # embedded in a byte string. That data can look like one of two things.
     # Which thing it looks like depends on the value of the key in question,
     # and the value of any given key will always be either: (1) a BM_Shape, or
-    # (2) A BM_Type.
+    # (2) A BM_Registry.
     #
     # So, by traversing the shape recursively and turning any BM_Shapes you
-    # encounter into BM_Types, you end up with map that you can use to give
+    # encounter into BM_Registrys, you end up with map that you can use to give
     # meaning to a stream of arbitrary bytes.
 
     # Example:
@@ -43,14 +43,14 @@ class TestBMShape < Minitest::Test
 
     # Ok.. notice that those definitions are nice and friendly when you type
     # them but they don't mean much without some sort of mapping back to the
-    # BM_Type. The `wrap(..)` function takes care of doing that. As it walks
+    # BM_Registry. The `wrap(..)` function takes care of doing that. As it walks
     # through the definition it resolves strings/symbols it encounters.
     #
     # In order for that string or symbol to resolve meaningfully its necessary
     # to first wrap a type using that symbol. So, first, wrap the types you'll
-    # need. When you do that, BM_Type will register it in a namespace that it
+    # need. When you do that, BM_Registry will register it in a namespace that it
     # shares with BM_Shape so that it's available for resolution.
-    BM_Type.wrap([8,'C'], :uint8_t)
+    BM_Registry.register([8,'C'], :uint8_t)
 
     # ...then you can wrap the definition
     wrapped = BM_Shape.wrap(my_shape, my_name)
@@ -58,8 +58,8 @@ class TestBMShape < Minitest::Test
     # The name gets upcased:
     assert_equal(my_name.upcase, wrapped.name)
 
-    # Symbolic references to BM_Types, if any, are resolved:
-    expect = my_shape.values.map { |v| BM_Type.retrieve(v.upcase) }
+    # Symbolic references to BM_Registrys, if any, are resolved:
+    expect = my_shape.values.map { |v| BM_Registry.retrieve(v.upcase) }
     actual = wrapped.values
     assert_equal(expect, actual)
   end
@@ -77,7 +77,7 @@ class TestBMShape < Minitest::Test
     # that the sequence of the types is preserved in the final list. This is
     # important when the entire point is to have these types describing
     # specific offsets into a byte string.
-    BM_Type.wrap([8,'C'], :uint8_t)
+    BM_Registry.register([8,'C'], :uint8_t)
     flattened = {
       outer0_middle0_inner0: :uint8_t,
       outer0_middle0_inner1: :uint8_t,
@@ -108,7 +108,7 @@ class TestBMShape < Minitest::Test
     # what's used to define and resolve symbolic references in literal
     # definitions. The name gets uppercased and symbolized as part of the
     # wrapping process.
-    BM_Type.wrap([8,'C'], :uint8_t)
+    BM_Registry.register([8,'C'], :uint8_t)
     obj = BM_Shape.wrap({'outer': { 'inner': :uint8_t }}, 'test_name')
     assert_equal(:TEST_NAME, obj.name)
     assert_equal(:OUTER, obj[:outer].name)
@@ -125,7 +125,7 @@ class TestBMShape < Minitest::Test
     # Example:
 
     # Wrap a type definition to use in the shape definition.
-    BM_Type.wrap([8,'C'], :uint8_t)
+    BM_Registry.register([8,'C'], :uint8_t)
 
     # As discussed, first wrap the shape with a name so it gets registered.
     obj = BM_Shape.wrap({'outer': { 'inner': :uint8_t }}, :test_anon_wrap)
@@ -143,9 +143,9 @@ class TestBMShape < Minitest::Test
     # Shape is a subclass of the native Hash class and it overrides the []
     # operator so that when a new member is added to the shape it becomes
     # accessible via the dot operator.
-    inner0 = BM_Type.wrap([8,'C'], :uint8_t)
-    middle1 = BM_Type.wrap([16,'S'], :uint16_t)
-    outer1 = BM_Type.wrap([32,'L'], :uint32_t)
+    inner0 = BM_Registry.register([8,'C'], :uint8_t)
+    middle1 = BM_Registry.register([16,'S'], :uint16_t)
+    outer1 = BM_Registry.register([32,'L'], :uint32_t)
     obj = BM_Shape.wrap(
       {
         outer0: { 
@@ -173,7 +173,7 @@ class TestBMShape < Minitest::Test
     # serves two purposes: (1) it greatly reduces the possibility (anything's
     # possible amirite LOL) of having two shapes with the same name but different
     # contents, and (2) it gives a very (very) small performance boost. 
-    BM_Type.wrap([8,'C'], :uint8_t)
+    BM_Registry.register([8,'C'], :uint8_t)
 
     # The test works by taking advantage of the fact that the registry will not
     # overwrite an existing name <-> object registration unless explicitly
