@@ -18,7 +18,6 @@ module Bytemapper
   require 'bytemapper/nameable'
   require 'bytemapper/flattenable'
   require 'bytemapper/chunk'
-  require 'bytemapper/mapper'
 
   @@registry = Registry.new
 
