@@ -20,9 +20,10 @@ module Bytemapper
     attr_reader :names
     attr_reader :objects
 
-    def initialize
+    def initialize(with_basic_types = true)
       @objects = {}
       @names = {}
+      register_basic_types unless with_basic_types == false
     end
 
     def empty?
@@ -42,9 +43,11 @@ module Bytemapper
       if (obj.is_a?(String) || obj.is_a?(Symbol))
         name = obj
         key = @names[obj]
-      else (obj.is_a?(Array) || obj.is_a?(Hash))
-        register(obj) unless registered?(obj)
+      elsif (obj.is_a?(Array) || obj.is_a?(Hash))
+        put(obj, name)
         key = obj.hash
+      else
+        raise ArgumentError "Invalid obj"
       end
       @objects[key]
     end
@@ -52,6 +55,7 @@ module Bytemapper
     def put(obj, name = nil)
       obj = register_obj(obj)
       register_name(obj, name)
+      obj
     end
 
     def registered_name?(name)
@@ -71,8 +75,16 @@ module Bytemapper
     end
 
     def register_name(obj, name)
-      @names[name] ||= obj.hash unless name.nil?
-      obj.names << name
+      unless name.nil?
+        if registered_name?(name) && get(name) != obj
+          raise ArgumentError.new 'Name is already registered' 
+        else
+          name = name.to_sym
+          @names[name] ||= obj.hash
+          obj.names << name
+        end
+      end
+      obj
     end
 
     def print
@@ -142,5 +154,24 @@ module Bytemapper
       buf.string
     end
 
+    def reset(with_basic_types = true)
+      flush
+      register_basic_types unless with_basic_types == false
+    end
+
+    private
+    def register_basic_types
+      [
+        [:uint8_t, [8,'C']],
+        [:bool, [8,'C']],
+        [:uint16_t, [16,'S']],
+        [:uint32_t, [32,'L']],
+        [:uint64_t, [64,'Q']],
+        [:int8_t, [8,'c']],
+        [:int16_t, [16,'s']],
+        [:int32_t, [32,'l']],
+        [:int64_t, [64,'q']]
+      ].each { |name, type| put(type, name) }
+    end
   end
 end

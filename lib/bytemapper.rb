@@ -13,6 +13,7 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 module Bytemapper
   require 'bytemapper/registry'
   require 'bytemapper/nameable'
@@ -21,37 +22,21 @@ module Bytemapper
 
   @@registry = Registry.new
 
-  [
-    [:uint8_t, [8,'C']],
-    [:bool, [8,'C']],
-    [:uint16_t, [16,'S']],
-    [:uint32_t, [32,'L']],
-    [:uint64_t, [64,'Q']],
-    [:int8_t, [8,'c']],
-    [:int16_t, [16,'s']],
-    [:int32_t, [32,'l']],
-    [:int64_t, [64,'q']]
-  ].each do |name, type|
-    @@registry.put(type, name)
-  end
-
-  def self.wrap(shape, name)
-    return nil unless shape.is_a?(Hash)
-    self._wrap(shape, name)
-  end
-
-  def self._wrap(obj, name, wrapper = {})
+  def self.wrap(obj, name = nil, wrapper = {})
     if (obj.is_a?(Array) || obj.is_a?(String) || obj.is_a?(Symbol))
-      return registry.get(obj, name)
-    else obj.is_a?(Hash)
+      obj = registry.get(obj, name)
+      raise ArgumentError.new "Failed to resolve type symbol" if obj.nil?
+    elsif obj.is_a?(Hash)
       obj.each do |k, v|
-        wrapper[k] = _wrap(v, k)
+        wrapper[k] = wrap(v, k)
         wrapper.define_singleton_method(k) { self.send(:fetch, k) }
       end
+      wrapper.extend(Flattenable)
+      obj = registry.put(wrapper, name)
+    else
+      raise ArgumentError.new "Invalid object"
     end
-    wrapper.extend(Flattenable)
-    registry.put(wrapper, name)
-    wrapper
+    obj
   end
 
   def self.map(bytes, shape, name = nil)
@@ -61,6 +46,23 @@ module Bytemapper
   end
 
   def self.registry
+    @@registry
+  end
+
+  def reset(with_basic_types = true)
+    [
+      [:uint8_t, [8,'C']],
+      [:bool, [8,'C']],
+      [:uint16_t, [16,'S']],
+      [:uint32_t, [32,'L']],
+      [:uint64_t, [64,'Q']],
+      [:int8_t, [8,'c']],
+      [:int16_t, [16,'s']],
+      [:int32_t, [32,'l']],
+      [:int64_t, [64,'q']]
+    ].each do |name, type|
+      @@registry.put(type, name)
+    end
     @@registry
   end
 end
