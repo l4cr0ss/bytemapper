@@ -22,31 +22,29 @@ typedef struct {
 And this string of bytes representing an instance of the above struct:
 
 ```ruby
-bytes = "\x35\x31\x30\x39\x30\x31\x38\x35\x34\x33\x00\x01\x01\x01"
+bytes = "\x5e\xcc\x0f\xf4\x01\x00\x01\x00\x01"
 ```
 
 By rewriting the struct like this:
 
 ```ruby
-# These definitions are called "shapes"
 shape = {
-  timestamp: :uint8_t, # these types come for free with the library
+  timestamp: :uint8_t,
   hardwareSwitchState: :bool,
   debouncedSwitchState: :bool,
   current: :bool,
-  previous: :bool, # you can define custom types, or alias the prepackaged types
+  previous: :bool,
   debouncing: :bool
 }
 ```
 
-You can wrap the bytes into a `BM_Chunk`, like this:
+You can map the bytes into an object, like this:
 
 ```ruby
-keystate = BM_Chunk.wrap(bytes, shape, :key_state_t)
+keystate = Bytemapper.wrap(bytes, shape, :key_state_t)
 keystate.class
 ```
 
-And with this object, you can access all the fields of the original struct by name!
-
+Now you can access all the fields of the original struct by name!
 ```ruby
 ```

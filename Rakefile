@@ -32,10 +32,10 @@ task :upgrade do |t|
       else
         v[2] += 1
       end
-      v = " '#{v.join('.')}'"
+      v = "       '#{v.join('.')}'"
     when 'date'
       # Set the date to today's date
-      v = " '#{Time.now.strftime("%Y-%m-%d")}'"
+      v = "       '#{Time.now.strftime("%Y-%m-%d")}'"
     else
       # Otherwise keep the previous value
       v = value
