@@ -25,7 +25,7 @@ module Bytemapper
   def self.wrap(obj, name = nil, wrapper = {})
     if (obj.is_a?(Array) || obj.is_a?(String) || obj.is_a?(Symbol))
       obj = registry.get(obj, name)
-      raise ArgumentError.new "Failed to resolve type symbol" if obj.nil?
+      raise ArgumentError.new "Failed to resolve symbol #{name}" if obj.nil?
     elsif obj.is_a?(Hash)
       obj.each do |k, v|
         wrapper[k] = wrap(v, k)

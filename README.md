@@ -29,22 +29,37 @@ By rewriting the struct like this:
 
 ```ruby
 shape = {
-  timestamp: :uint8_t,
+  timestamp: :uint32_t,
   hardwareSwitchState: :bool,
   debouncedSwitchState: :bool,
   current: :bool,
   previous: :bool,
   debouncing: :bool
 }
+
 ```
 
 You can map the bytes into an object, like this:
 
 ```ruby
-keystate = Bytemapper.wrap(bytes, shape, :key_state_t)
-keystate.class
+keystate = Bytemapper.map(bytes, shape, :key_state_t)
 ```
 
 Now you can access all the fields of the original struct by name!
 ```ruby
+irb(main):016:0> keystate.class
+=> Bytemapper::Chunk
+irb(main):017:0> 
+irb(main):018:0> keystate
+=> #<Bytemapper::Chunk:0x0000558105afa6c8 @bytes=#<StringIO:0x0000558105afb398>, @wrapper={
+:timestamp=>[32, "L"], :hardwareSwitchState=>[8, "C"], :debouncedSwitchState=>[8, "C"], :cu
+rrent=>[8, "C"], :previous=>[8, "C"], :debouncing=>[8, "C"]}, @name=:key_state_t, @timestam
+p=4094676062, @hardwareSwitchState=1, @debouncedSwitchState=0, @current=1, @previous=0, @de
+bouncing=1>
+irb(main):019:0> keystate.hardwareSwitchState
+=> 1
+irb(main):020:0> keystate.timestamp
+=> 4094676062
+irb(main):021:0> keystate.debouncing
+=> 1
 ```
