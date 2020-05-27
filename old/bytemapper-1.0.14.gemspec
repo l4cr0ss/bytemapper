@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'bytemapper'
-  s.version = '1.0.15'
+  s.version = '1.0.14'
   s.date = '2020-05-27'
   s.summary = "Map byte strings to Ruby objects"
   s.description = "Model and interact with bytestrings using Ruby objects."

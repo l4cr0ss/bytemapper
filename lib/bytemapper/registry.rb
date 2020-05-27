@@ -164,6 +164,8 @@ module Bytemapper
     private
     def register_basic_types
       [
+        [:char, [8,'c']],
+        [:uchar, [8,'C']],
         [:uint8_t, [8,'C']],
         [:bool, [8,'C']],
         [:uint16_t, [16,'S']],
