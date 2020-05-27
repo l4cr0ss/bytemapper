@@ -5,33 +5,50 @@
 # the terms of the GNU Affero General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option) any
 # later version.
-
+#
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
 # details.
-
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 module Bytemapper
   class Chunk
-    attr_reader :bytes, :wrapper, :name
+    attr_reader :bytes, :shape, :name
 
-    def initialize(bytes, wrapper, name)
+    def initialize(bytes, shape, name)
       @bytes = bytes 
-      @wrapper = wrapper
+      @shape = shape
       @name = name
 
-      wrapper.flatten.each do |k,v|
+      shape.flatten.each do |k,v|
         singleton_class.instance_eval { attr_reader k }
         instance_variable_set("@#{k.to_s}", unpack(v))
       end
     end
 
+    def string
+      bytes.string
+    end
+
+    def ord
+      bytes.string.split(//).map(&:ord)
+    end
+
+    def chr
+      bytes.string.split(//).map(&:chr)
+    end
+
+    def size
+      @bytes.size
+    end
+
     def unpack(value, endian = nil)
       num_bytes, flag = value
-      bytes.read(num_bytes >> 3).unpack("#{flag}#{endian}")[0]
+      _bytes = bytes.read(num_bytes >> 3)
+      _bytes.unpack("#{flag}#{endian}")[0] unless _bytes.nil?
     end
   end
 end
