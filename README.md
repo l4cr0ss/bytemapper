@@ -59,15 +59,96 @@ irb(main):021:0> keystate.debouncing
 => 1
 ```
 
-The json thing is called a `shape`. The keys are the names you want to use to
-refer to the attributes of the struct you're mapping. The values of those keys
-are either (1) another shape or (2) a `type`. 
+## Terminology
+
+The json thing that defines the order of the bytes and the name of each member
+is called a `shape`. The keys are the names you want to use to refer to the
+attributes of the struct you're mapping. The values of those keys are either
+(1) another shape or (2) a type. 
 
 A type is an array with two entries. The first item is the width in bits of the
 key being described. The second is the unpack directive expected by ruby's
 String#unpack method for unpacking bytes like the key being described.
 
-If you pass in too few bytes to the map, that's ok:
+You'll notice that in the above shape, the types were provided as symbols, not
+as array literals. By default the library gives you the following types:
+
+```ruby
+  [:uint8_t, [8,'C']],
+  [:bool, [8,'C']],
+  [:uint16_t, [16,'S']],
+  [:uint32_t, [32,'L']],
+  [:uint64_t, [64,'Q']],
+  [:int8_t, [8,'c']],
+  [:int16_t, [16,'s']],
+  [:int32_t, [32,'l']],
+  [:int64_t, [64,'q']]
+```
+
+At any point in time you can check the internal registry to see what types have
+been defined so far. 
+
+```ruby
+irb(main):001:0> Bytemapper.registry.print
++-----------+---------+-------+-----------+
+| :uint8_t  |  310565 | Array | [8, "C"]  |
+| :bool     |  310565 | Array | [8, "C"]  |
+| :uint16_t |  213434 | Array | [16, "S"] |
+| :uint32_t |  203010 | Array | [32, "L"] |
+| :uint64_t |  561129 | Array | [64, "Q"] |
+| :int8_t   |  353623 | Array | [8, "c"]  |
+| :int16_t  |  609566 | Array | [16, "s"] |
+| :int32_t  |  333146 | Array | [32, "l"] |
+| :int64_t  | -246360 | Array | [64, "q"] |
++-----------+---------+-------+-----------+
+=> nil
+irb(main):002:0> 
+```
+
+If you want to add your own types, it's easy - just call the function `wrap()`
+and provide the type followed by the name:
+
+```ruby
+irb(main):002:0> Bytemapper.wrap([8,"c"],:i8)
+=> [8, "c"]
+irb(main):003:0> Bytemapper.registry.print
++-----------+---------+-------+-----------+
+| :uint8_t  |  310565 | Array | [8, "C"]  |
+| :bool     |  310565 | Array | [8, "C"]  |
+| :uint16_t |  213434 | Array | [16, "S"] |
+| :uint32_t |  203010 | Array | [32, "L"] |
+| :uint64_t |  561129 | Array | [64, "Q"] |
+| :int8_t   |  353623 | Array | [8, "c"]  |
+| :i8       |  353623 | Array | [8, "c"]  |
+| :int16_t  |  609566 | Array | [16, "s"] |
+| :int32_t  |  333146 | Array | [32, "l"] |
+| :int64_t  | -246360 | Array | [64, "q"] |
++-----------+---------+-------+-----------+
+=> nil
+irb(main):004:0> 
+```
+
+If you'd like to set the predefined names to something other than their
+defaults, you can do that by calling `reset()` and passing false:
+```ruby
+# lib/bytemapper/registry.rb
+def reset(with_basic_types = true)
+  flush
+  register_basic_types unless with_basic_types == false
+end
+
+# irb
+irb(main):004:0> Bytemapper.registry.reset(false)
+=> nil
+irb(main):005:0> Bytemapper.registry.print
+
+=> nil
+irb(main):006:0> 
+```
+
+## More examples
+
+If you pass in too few bytes to a map, that's ok:
 ```ruby
 irb(main):010:0> # ..setup the shape as before
 irb(main):011:0> bytes = "\x5e\xcc\x0f\xf4\x01\x00\x01"
