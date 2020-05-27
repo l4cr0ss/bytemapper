@@ -19,7 +19,7 @@ task :upgrade do |t|
 
   # Walk through the remaining key/val pairs.
   old_spec.each do |l|
-    key, value = l.strip.split('=')
+    key, value = l.strip.split('=').map(&:strip)
     case key.strip.split('.').last
     when 'version'
       # Extract the current (now old) version numbers and bump as appropriate.
@@ -32,10 +32,10 @@ task :upgrade do |t|
       else
         v[2] += 1
       end
-      v = "       '#{v.join('.')}'"
+      v = "'#{v.join('.')}'"
     when 'date'
       # Set the date to today's date
-      v = "       '#{Time.now.strftime("%Y-%m-%d")}'"
+      v = "'#{Time.now.strftime("%Y-%m-%d")}'"
     else
       # Otherwise keep the previous value
       v = value

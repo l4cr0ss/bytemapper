@@ -5,14 +5,15 @@
 # the terms of the GNU Affero General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option) any
 # later version.
-
+#
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
 # details.
-
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 module Bytemapper
   class Registry
     require 'bytemapper/nameable'
@@ -41,15 +42,15 @@ module Bytemapper
 
     def get(obj, name = nil)
       if (obj.is_a?(String) || obj.is_a?(Symbol))
-        name = obj
-        key = @names[obj]
+        # Object assumed to be a registered name
+        obj = @objects.fetch(@names[obj])
+        register_alias(obj, name) unless name.nil?
       elsif (obj.is_a?(Array) || obj.is_a?(Hash))
-        put(obj, name)
-        key = obj.hash
+        obj = put(obj, name)
       else
         raise ArgumentError "Invalid obj"
       end
-      @objects[key]
+      obj
     end
 
     def put(obj, name = nil)
@@ -86,6 +87,7 @@ module Bytemapper
       end
       obj
     end
+    alias :register_alias :register_name
 
     def print
       puts to_s
@@ -134,7 +136,7 @@ module Bytemapper
           " #{obj.class.to_s} ",
           " #{obj.to_s} "
           ]
-          
+
           # Calculate padding for each column.
           pads = widths.zip(values).map { |a,b| a - b.size }
 
