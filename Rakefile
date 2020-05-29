@@ -32,7 +32,8 @@ task :upgrade do |t|
       else
         v[2] += 1
       end
-      v = "'#{v.join('.')}'"
+      NEW_VERSION = "'#{v.join('.')}'"
+      v = NEW_VERSION
     when 'date'
       # Set the date to today's date
       v = "'#{Time.now.strftime("%Y-%m-%d")}'"
@@ -60,6 +61,9 @@ task :upgrade do |t|
 
   # Build the new gem and install it 
   system("gem build && gem install bytemapper")
+
+  # Push the new gem to rubygems
+  system("gem push bytemapper-#{NEW_VERSION}.gem")
 end
 
 task :default => :test
