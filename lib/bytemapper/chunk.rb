@@ -19,14 +19,16 @@ module Bytemapper
     attr_reader :bytes, :shape, :name
 
     def initialize(bytes, shape, name)
-      @bytes = bytes 
-      @shape = shape
       @name = name
+      @shape = shape
+      @bytes = bytes
+      bytes.truncate(shape.size)
 
       shape.flatten.each do |k,v|
         singleton_class.instance_eval { attr_reader k }
         instance_variable_set("@#{k.to_s}", unpack(v))
       end
+
     end
 
     def string
@@ -42,7 +44,7 @@ module Bytemapper
     end
 
     def size
-      @bytes.size
+      bytes.size
     end
 
     def unpack(value, endian = nil)
