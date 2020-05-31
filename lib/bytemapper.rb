@@ -23,12 +23,16 @@ module Bytemapper
   @@registry = Registry.new
 
   def self.wrap(obj, name = nil, wrapper = {})
+    _wrap(obj, name, wrapper)
+  end
+
+  def self._wrap(obj, name = nil, wrapper = {})
     if (obj.is_a?(Array) || obj.is_a?(String) || obj.is_a?(Symbol))
       obj = registry.get(obj, name)
       raise ArgumentError.new "Object must not be nil" if obj.nil?
     elsif obj.is_a?(Hash)
       obj.each do |k, v|
-        wrapper[k] = wrap(v, k)
+        wrapper[k] = _wrap(v, k)
         wrapper.define_singleton_method(k) { self.send(:fetch, k) }
       end
       wrapper.extend(Flattenable)
