@@ -137,7 +137,7 @@ class TestShape < Minitest::Test
         },
         outer1: :uint32_t
       }, :test_convenience_accessors)
-    assert_equal(obj[:outer0], obj.outer0 )
+    assert_equal(obj[:outer0], obj.outer0)
     assert_equal(obj[:outer0][:middle0], obj.outer0.middle0)
     assert_equal(obj[:outer0][:middle0][:inner0], obj.outer0.middle0.inner0)
     assert_equal(inner0, obj.outer0.middle0.inner0)

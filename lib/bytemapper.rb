@@ -1,4 +1,4 @@
-# Bytemapper - Model arbitrary bytestrings as Ruby objects.  
+# Bytemapper - Model arbitrary bytestrings as Ruby objects.
 # Copyright (C) 2020 Jefferson Hudson
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -16,58 +16,87 @@
 
 module Bytemapper
   require 'bytemapper/registry'
+  require 'bytemapper/shape'
+  require 'bytemapper/type'
   require 'bytemapper/nameable'
-  require 'bytemapper/flattenable'
   require 'bytemapper/chunk'
 
   @@registry = Registry.new
 
-  def self.wrap(obj, name = nil, wrapper = {})
-    _wrap(obj, name, wrapper)
-  end
+  class << self
 
-  def self._wrap(obj, name = nil, wrapper = {})
-    if (obj.is_a?(Array) || obj.is_a?(String) || obj.is_a?(Symbol))
-      obj = registry.get(obj, name)
-      raise ArgumentError.new "Object must not be nil" if obj.nil?
-    elsif obj.is_a?(Hash)
-      obj.each do |k, v|
-        wrapper[k] = _wrap(v, k)
-        wrapper.define_singleton_method(k) { self.send(:fetch, k) }
+    def register(obj, name, fqname = [])
+      return if obj.nil?
+      name = name.downcase.to_sym unless name.nil?
+      fqname << name unless name.nil?
+      if is_a_type?(obj)
+        name = fqname.size > 1 ? fqname.join('.') : fqname.first
+        obj = Type.new(obj)
+        put(obj, name)
+      elsif is_a_name?(obj)
+        register(get(obj), nil, fqname)
+      elsif is_a_shape?(obj)
+        if registered?(obj)
+          obj = get(obj)
+          put(obj, name)
+        else
+          shape = Shape.new
+          obj.each do |k,v|
+            shape[k] = register(v, k, [].concat(fqname))
+          end
+          put(shape, name)
+        end
+      else
+        put(obj, name)
       end
-      wrapper.extend(Flattenable)
-      obj = registry.put(wrapper, name)
-    else
-      raise ArgumentError.new "Invalid object"
     end
-    obj
-  end
+    alias :wrap :register
 
-  def self.map(bytes, shape, name = nil)
-    bytes.force_encoding(Encoding::ASCII_8BIT)
-    bytes = StringIO.new(bytes)
-    wrapper = self.wrap(shape, name)
-    Chunk.new(bytes, wrapper, name)
-  end
-
-  def self.registry
-    @@registry
-  end
-
-  def reset(with_basic_types = true)
-    [
-      [:uint8_t, [8,'C']],
-      [:bool, [8,'C']],
-      [:uint16_t, [16,'S']],
-      [:uint32_t, [32,'L']],
-      [:uint64_t, [64,'Q']],
-      [:int8_t, [8,'c']],
-      [:int16_t, [16,'s']],
-      [:int32_t, [32,'l']],
-      [:int64_t, [64,'q']]
-    ].each do |name, type|
-      @@registry.put(type, name)
+    def is_a_type?(obj)
+      obj.is_a?(Type) ||
+      obj.is_a?(Array) &&
+      obj.size == 2 &&
+      obj.first.is_a?(Integer) &&
+      obj.last.is_a?(String)
     end
-    @@registry
+
+    def is_a_shape?(obj)
+      obj.is_a?(Hash)
+    end
+
+    def is_a_name?(obj)
+      obj.is_a?(String) || obj.is_a?(Symbol)
+    end
+
+    def map(bytes, shape, name = nil)
+      bytes.force_encoding(Encoding::ASCII_8BIT)
+      bytes = StringIO.new(bytes)
+      shape = wrap(shape, name)
+      Chunk.new(bytes, shape, name)
+    end
+
+    def registered?(obj)
+      registry.registered?(obj)
+    end
+
+    def get(obj)
+      registry.get(obj)
+    end
+
+    def put(obj, name)
+      registry.put(obj, name)
+    end
+
+    def print
+      registry.print
+    end
+
+    def registry
+      @@registry
+    end
+
+    def reset(with_basic_types = true)
+      @@registry = Registry.new(with_basic_types)
+    end
   end
 end

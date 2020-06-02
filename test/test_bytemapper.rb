@@ -27,8 +27,8 @@ class TestBytemapper < Minitest::Test
     chunk = Bytemapper.map(@bytes, shape)
 
     # Chunks map bytes to attributes for easy access.
-    assert_equal(1, chunk.header_type)
-    assert_equal(2, chunk.header_data)
+    assert_equal(1, chunk.header.type)
+    assert_equal(2, chunk.header.data)
     assert_equal(3, chunk.type)
     assert_equal(4, chunk.data)
     assert_equal(5, chunk.more)
@@ -37,7 +37,7 @@ class TestBytemapper < Minitest::Test
   def test_symbolic_types
     # You can using symbolic names (define your own or use premade ones)
     # instead of literal type definitions.
-    Bytemapper.registry.put([8,'C'],:u8)
+    Bytemapper.register([8,'C'],:u8)
     shape = {
       header: {
         type: :uint8_t,
@@ -48,8 +48,8 @@ class TestBytemapper < Minitest::Test
       more: :u8
     };
     chunk = Bytemapper.map(@bytes, shape)
-    assert_equal(1, chunk.header_type)
-    assert_equal(2, chunk.header_data)
+    assert_equal(1, chunk.header.type)
+    assert_equal(2, chunk.header.data)
     assert_equal(3, chunk.type)
     assert_equal(4, chunk.data)
     assert_equal(5, chunk.more)

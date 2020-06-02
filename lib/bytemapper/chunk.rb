@@ -15,20 +15,26 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 module Bytemapper
-  class Chunk
+  require 'bytemapper/flattenable'
+  class Chunk < Hash
+    include Flattenable
     attr_reader :bytes, :shape, :name
 
     def initialize(bytes, shape, name)
       @name = name
       @shape = shape
-      @bytes = bytes
-      bytes.truncate(shape.size)
-
-      shape.flatten.each do |k,v|
+      @bytes = bytes.is_a?(StringIO) ? bytes : StringIO.new(bytes)
+      @bytes.truncate(shape.size)
+      replace(shape)
+      each_pair do |k,v|
+        self[k] = if v.is_a?(Hash)
+                    Chunk.new(@bytes.read(v.size), v, k)
+                  else
+                    unpack(v)
+                  end
         singleton_class.instance_eval { attr_reader k }
-        instance_variable_set("@#{k.to_s}", unpack(v))
+        instance_variable_set("@#{k.to_s}", self[k])
       end
-
     end
 
     def string
@@ -45,6 +51,9 @@ module Bytemapper
 
     def size
       bytes.size
+    end
+
+    def print
     end
 
     def unpack(value, endian = nil)

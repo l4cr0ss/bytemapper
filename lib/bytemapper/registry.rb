@@ -1,4 +1,4 @@
-# Bytemapper - Model arbitrary bytestrings as Ruby objects.  
+# Bytemapper - Model arbitrary bytestrings as Ruby objects.
 # Copyright (C) 2020 Jefferson Hudson
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -37,53 +37,58 @@ module Bytemapper
     end
 
     def registered?(obj)
-      names.key?(obj) || objects.key?(obj.hash)
+      v = registered_name?(obj) if obj.respond_to?(:to_sym)
+      v || registered_obj?(obj)
     end
 
-    def get(obj, name = nil)
-      if (obj.is_a?(String) || obj.is_a?(Symbol))
-        # Object assumed to be a registered name
-        obj = @objects.fetch(@names[obj])
-        register_alias(obj, name) unless name.nil?
-      elsif (obj.is_a?(Array) || obj.is_a?(Hash))
-        obj = put(obj, name)
+    def get(obj)
+      if registered_name?(obj)
+        obj = obj.to_sym.downcase
+        @objects.fetch(@names[obj]) unless obj.nil?
+      elsif registered_obj?(obj)
+        @objects.fetch(obj.hash)
       else
-        raise ArgumentError "Invalid obj"
+        nil
       end
-      obj
     end
 
     def put(obj, name = nil)
       obj = register_obj(obj)
-      register_name(obj, name)
+      register_name(obj, name) unless name.nil?
       obj
     end
 
     def registered_name?(name)
-      @names.key?(name) 
+      if name.respond_to?(:to_sym)
+        name = name.to_sym.downcase
+        @names.key?(name)
+      else
+        false
+      end
     end
 
     def registered_obj?(obj)
-      @objects.key?(obj.hash) 
+      @objects.key?(obj.hash)
     end
 
     def register_obj(obj)
       unless registered_obj?(obj)
-        obj.extend(Nameable)
-        obj.names = Set.new
+        begin
+          obj.extend(Nameable)
+          obj.names = Set.new
+        rescue TypeError
+        end
       end
       @objects[obj.hash] ||= obj
     end
 
     def register_name(obj, name)
-      unless name.nil?
-        if registered_name?(name) && get(name) != obj
-          raise ArgumentError.new 'Name is already registered' 
-        else
-          name = name.to_sym
-          @names[name] ||= obj.hash
-          obj.names << name
-        end
+      if registered_name?(name) && get(name) != obj
+        raise ArgumentError.new 'Name is already registered'
+      else
+        name = name.to_sym.downcase
+        @names[name] ||= obj.hash
+        obj.names << name if obj.respond_to?(:names)
       end
       obj
     end
@@ -99,13 +104,17 @@ module Bytemapper
       # Buffer to build up output.
       buf = StringIO.new
 
-      # Calculate the width of each column.
+      # Calculate the true max width of each column.
       widths = [
         @names.keys.size.zero? ? 0 : @names.keys.map(&:size).max + 1, # add space for the `:`
         7, # length of ID to print
         @objects.values.map { |o| o.class.to_s.size }.max,
         @objects.values.map { |v| v.to_s.size }.max
       ]
+
+      # Truncate more than `max_width` num chars
+      max_width = 60
+      widths = widths.map { |w| w > max_width ? max_width : w }
 
       # Add an extra space at the beginning and end of each column.
       widths = widths.map { |p| p += 2 }
@@ -127,21 +136,29 @@ module Bytemapper
 
           # Fixup the id string so it pads nicely
           idstr = id.positive? ? id.to_s[..5] : id.to_s[..6]
-          idstr = id.positive? ? "  #{idstr}" : " #{idstr}"
+          idstr = id.positive? ? " #{idstr}" : "#{idstr}"
 
-          # Wrap each column value with whitespace.
+          # Generate the column values
           values = [
-          name.empty? ? name : " :#{name} ",
-          idstr,
-          " #{obj.class.to_s} ",
-          " #{obj.to_s} "
+            name.empty? ? name : ":#{name}",
+            idstr,
+            "#{obj.class.to_s}",
+            "#{obj.to_s}"
           ]
 
-          # Calculate padding for each column.
-          pads = widths.zip(values).map { |a,b| a - b.size }
+          # Pad the values to fit in their respective columns, truncating as
+          # needed to stay within `max_width`
+          values = widths.zip(values).map do |w,v|
+            q = w - v.size
+            if q < 2
+              " #{v[..w-7]} ... "
+            else
+              " #{v}#{" "*(q-1)}"
+            end
+          end
 
           values.size.times do |i|
-            buf << "#{values[i]}#{' '*pads[i]}|"
+            buf << "#{values[i]}|"
           end
           buf << "\n"
         end
@@ -164,18 +181,21 @@ module Bytemapper
     private
     def register_basic_types
       [
-        [:char, [8,'c']],
-        [:uchar, [8,'C']],
         [:uint8_t, [8,'C']],
+        [:uchar, [8,'C']],
         [:bool, [8,'C']],
         [:uint16_t, [16,'S']],
         [:uint32_t, [32,'L']],
         [:uint64_t, [64,'Q']],
         [:int8_t, [8,'c']],
+        [:char, [8,'c']],
         [:int16_t, [16,'s']],
         [:int32_t, [32,'l']],
         [:int64_t, [64,'q']]
-      ].each { |name, type| put(type, name) }
+      ].each do |name, type|
+        type = Type.new(type)
+        put(type, name)
+      end
     end
   end
 end
