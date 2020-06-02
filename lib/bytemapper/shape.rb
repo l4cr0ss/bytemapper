@@ -26,5 +26,9 @@ module Bytemapper
       singleton_class.instance_eval { attr_reader k }
       instance_variable_set("@#{k.to_s}", self[k])
     end
+
+    def size
+      flatten.values.map(&:size).reduce(:+)
+    end
   end
 end
