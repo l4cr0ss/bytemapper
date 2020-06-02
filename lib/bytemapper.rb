@@ -71,8 +71,14 @@ module Bytemapper
     def map(bytes, shape, name = nil)
       bytes.force_encoding(Encoding::ASCII_8BIT)
       bytes = StringIO.new(bytes)
-      shape = wrap(shape, name)
-      Chunk.new(bytes, shape, name)
+      if shape.is_a?(Array)
+        chunks = []
+        shape.each { |s| chunks << Chunk.new(bytes.read(s.size), s, name) }
+        chunks
+      else
+        shape = wrap(shape, name)
+        Chunk.new(bytes, shape, name)
+      end
     end
 
     def registered?(obj)
