@@ -198,7 +198,7 @@ module Bytemapper
         [:i16, [16,'s']],
         [:int32_t, [32,'l']],
         [:i32, [32,'l']],
-        [:int64_t, [64,'q']]
+        [:int64_t, [64,'q']],
         [:i64, [64,'q']]
       ].each do |name, type|
         type = Type.new(type)

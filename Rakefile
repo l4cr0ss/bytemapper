@@ -63,7 +63,8 @@ task :upgrade do |t|
   system("gem build && gem install bytemapper")
 
   # Push the new gem to rubygems
-  system("gem push bytemapper-#{NEW_VERSION}.gem")
+  
+  #system("gem push bytemapper-#{NEW_VERSION}.gem")
 end
 
 task :default => :test
