@@ -15,8 +15,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 module Bytemapper
-  module Nameable
-    attr_accessor :name
-    attr_accessor :names
+  module Typeable
+    attr_accessor :type
   end
 end

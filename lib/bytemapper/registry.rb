@@ -182,16 +182,24 @@ module Bytemapper
     def register_basic_types
       [
         [:uint8_t, [8,'C']],
+        [:u8, [8,'C']],
         [:uchar, [8,'C']],
         [:bool, [8,'C']],
         [:uint16_t, [16,'S']],
+        [:u16, [16,'S']],
         [:uint32_t, [32,'L']],
+        [:u32, [32,'L']],
         [:uint64_t, [64,'Q']],
+        [:u64, [64,'Q']],
         [:int8_t, [8,'c']],
+        [:i8, [8,'c']],
         [:char, [8,'c']],
         [:int16_t, [16,'s']],
+        [:i16, [16,'s']],
         [:int32_t, [32,'l']],
+        [:i32, [32,'l']],
         [:int64_t, [64,'q']]
+        [:i64, [64,'q']]
       ].each do |name, type|
         type = Type.new(type)
         put(type, name)

@@ -93,6 +93,10 @@ module Bytemapper
       registry.put(obj, name)
     end
 
+    def names(filter_key = nil)
+      registry.names.keys
+    end
+
     def print
       registry.print
     end
