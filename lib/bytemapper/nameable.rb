@@ -16,7 +16,11 @@
 
 module Bytemapper
   module Nameable
-    attr_accessor :name
+    attr_reader :name
     attr_accessor :names
+
+    def name=(val)
+      @name ||= val.to_sym
+    end
   end
 end
