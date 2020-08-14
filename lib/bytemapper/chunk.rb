@@ -17,8 +17,9 @@
 module Bytemapper
   require 'bytemapper/flattenable'
   class Chunk < Hash
+    include Nameable
     include Flattenable
-    attr_reader :bytes, :shape, :name
+    attr_reader :bytes, :shape
 
     def initialize(bytes, shape, name)
       @name = name

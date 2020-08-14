@@ -80,4 +80,19 @@ class TestBytemapper < Minitest::Test
     nameless = Bytemapper.map(bytes, shape)
     assert_nil(nameless.name)
   end
+
+  def test_reverse_lookup
+    shape = {
+      d_tag:          :int64_t,    # Dynamic entry type
+      d_un:           :uint64_t      # Integer value or address value
+    }
+    Bytemapper.register(shape, :elf64_dyn)
+    lookup = Bytemapper.reverse_lookup(:elf64)
+    # [2] pry(#<TestBytemapper>)> pp lookup
+    # {[64, "q"]=>:"elf64_dyn.d_tag",
+    #  [64, "Q"]=>:"elf64_dyn.d_un",
+    #  {:d_tag=>[64, "q"], :d_un=>[64, "Q"]}=>:elf64_dyn}
+    assert_equal(lookup.class, Hash)
+    assert_equal(lookup.size, 3)
+  end
 end

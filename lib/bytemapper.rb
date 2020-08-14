@@ -113,5 +113,21 @@ module Bytemapper
     def reset(with_basic_types = true)
       @@registry = Registry.new(with_basic_types)
     end
+
+    def reverse_lookup(prefix, value = nil)
+      @@rl_cache ||= {}
+      prefix = "#{prefix.to_s}_"
+      lookup = @@rl_cache[prefix]
+
+      if lookup.nil?
+        labels = names.filter { |n| n.start_with?(prefix) } 
+        values = labels.map { |l| get(l) }
+        lookup = Hash[values.zip(labels)]
+        @@rl_cache[prefix] = lookup
+      end
+
+      value.nil? ? lookup : lookup[value]
+    end
+
   end
 end
