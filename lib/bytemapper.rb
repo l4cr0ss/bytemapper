@@ -20,6 +20,7 @@ module Bytemapper
   require 'bytemapper/type'
   require 'bytemapper/nameable'
   require 'bytemapper/chunk'
+  require 'bytemapper/table'
 
   @@registry = Registry.new
 
@@ -79,6 +80,10 @@ module Bytemapper
         shape = wrap(shape, name)
         Chunk.new(bytes, shape, name)
       end
+    end
+
+    def repeat(obj, times = nil)
+      Table.new(obj, times)
     end
 
     def registered?(obj)

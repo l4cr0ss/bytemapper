@@ -21,6 +21,8 @@ module Bytemapper
         k = prefix.nil? ?  k : "#{prefix}_#{k}".to_sym
         if v.is_a?(Hash)
           v.flatten(flattened, k)
+        elsif v.is_a?(Bytemapper::Table)
+          v.each_with_index { |e,i| e.flatten(flattened, i) }
         else
           flattened[k] = v
         end

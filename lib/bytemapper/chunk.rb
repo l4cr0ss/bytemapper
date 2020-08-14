@@ -28,6 +28,12 @@ module Bytemapper
       each_pair do |k,v|
         self[k] = if v.is_a?(Hash)
                     Chunk.new(@bytes.read(v.size), v, k)
+                  elsif v.is_a?(Bytemapper::Table)
+                    if v.unbounded?
+                      v.populate(@bytes.read(@bytes.size-@bytes.pos))
+                    else
+                      v.populate(@bytes.read(v.capacity))
+                    end
                   else
                     unpack(v)
                   end
