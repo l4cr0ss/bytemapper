@@ -24,7 +24,6 @@ module Bytemapper
       @name = name
       @shape = shape
       @bytes = bytes.is_a?(StringIO) ? bytes : StringIO.new(bytes)
-      @bytes.truncate(shape.size)
       replace(shape)
       each_pair do |k,v|
         self[k] = if v.is_a?(Hash)
