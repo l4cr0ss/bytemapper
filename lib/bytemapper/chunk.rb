@@ -49,11 +49,20 @@ module Bytemapper
       bytes.string.split(//).map(&:chr)
     end
 
+    def capacity
+      shape.size
+    end
+
     def size
       bytes.size
     end
 
-    def print
+    def consumed
+      size
+    end
+
+    def remaining
+      capacity - consumed
     end
 
     def unpack(value, endian = nil)
