@@ -41,6 +41,8 @@ module Bytemapper
         singleton_class.instance_eval { attr_reader k }
         instance_variable_set("@#{k.to_s}", self[k])
       end
+
+      shape.hooks.each {|h| h.call(self) }
     end
 
     def string

@@ -20,11 +20,21 @@ module Bytemapper
   class Shape < Hash
     include Flattenable
     include Nameable
+    attr_accessor :hooks
+
+    def initialize
+      super
+      @hooks = []
+    end
 
     def []=(k,v)
       super
       singleton_class.instance_eval { attr_reader k }
       instance_variable_set("@#{k.to_s}", self[k])
+    end
+
+    def hook(&block)
+      @hooks << block if block_given?
     end
 
     def size
