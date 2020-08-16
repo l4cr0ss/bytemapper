@@ -19,8 +19,8 @@ module Bytemapper
     attr_reader :name
     attr_accessor :names
 
-    def name=(val)
-      @name ||= val.to_sym
+    def name=(v)
+      @name ||= v.respond_to?(:to_sym) ? v.to_sym : v
     end
   end
 end
