@@ -15,6 +15,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 module Bytemapper
+  require 'refinements'
   require 'bytemapper/registry'
   require 'bytemapper/shape'
   require 'bytemapper/type'
